@@ -1,14 +1,18 @@
 library(tidyverse)
 library(dplyr)
 library(limma)
+library(conflicted)
+source("http://bioconductor.org/biocLite.R")
+library("AnnotationDbi")
+library("hgu133plus2.db")
 
 directory_path = "../Sepsis Data/E-GEOD-66099.processed.1"
 
 reference_matrix <- read.delim("../Sepsis Data/E-GEOD-66099.sdrf-ref-matrix.txt") %>%
   rename_at(vars(c('Source.Name','Characteristics..disease.')), ~ c('Sample','Condition')) %>% 
-  select(1, 5) %>% 
-  filter(Condition == "sepsis" | 
-           Condition == "control") 
+  dplyr::select(1, 5) %>% 
+  dplyr::filter(Condition == "sepsis" | 
+           Condition == "control")
 reference_matrix$Sample <- word(reference_matrix$Sample, 1)
 reference_matrix$Condition <- factor(reference_matrix$Condition)
 
@@ -49,6 +53,28 @@ fit <- lmFit(expression_matrix , design_matrix)
 fit <- eBayes(fit)
 tt <- topTable(fit, coef = 2, adjust.method = "BH", sort.by = "p", number = 200)
 
+affy_entrez_map <- AnnotationDbi::select(hgu133plus2.db, row.names(tt), c("ENTREZID")) %>%
+  na.omit()
+
+tt <- rownames_to_column(tt, 'PROBEID')
+tt <- as.data.frame(inner_join(affy_entrez_map, tt))
+tt <- aggregate(list(logFC = tt$logFC, AveExpr = tt$AveExpr, t = tt$t, 
+                 P.Value = tt$ P.Value, adj.P.Val = tt$adj.P.Val, B = tt$B), 
+            by=list(ENTREZID = tt$ENTREZID), FUN=mean) %>%
+  arrange(desc(abs(t))) %>%
+  column_to_rownames('ENTREZID')
+tt <- tt[ , !(names(tt) %in% c("PROBEID"))]
+
+positive_DEG <- tt %>% 
+  rownames_to_column('entrez_id') %>%
+  dplyr::filter(logFC > 0) %>%
+  column_to_rownames('entrez_id')
+
+negative_DEG <- tt %>% 
+  rownames_to_column('entrez_id') %>%
+  dplyr::filter(logFC < 0) %>%
+  column_to_rownames('entrez_id')
+
 rm(condition)
 rm(consolidated_df)
 rm(data_path)
@@ -64,5 +90,5 @@ rm(sample_name)
 rm(N)
 rm(design_matrix)
 rm(expression_matrix)
-
-
+rm(tt)
+rm(affy_entrez_map)
