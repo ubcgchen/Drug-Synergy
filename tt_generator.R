@@ -80,8 +80,8 @@ negative_DEG <- tt %>%
   dplyr::filter(logFC < 0) %>%
   column_to_rownames('entrez_id')
 
-write.table(positive_DEG, "upreg.txt", sep="\t")
-write.table(negative_DEG, "downreg.txt", sep="\t")
+write.table(as.numeric(row.names(positive_DEG)), "upreg.txt", sep="\t")
+write.table(as.numeric(row.names(negative_DEG)), "downreg.txt", sep="\t")
 
 rm(condition)
 rm(consolidated_df)
