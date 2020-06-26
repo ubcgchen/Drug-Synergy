@@ -5,6 +5,8 @@ library(conflicted)
 source("http://bioconductor.org/biocLite.R")
 library("AnnotationDbi")
 library("hgu133plus2.db")
+library(reticulate)
+library(xlsx)
 
 directory_path = "../Sepsis Data/E-GEOD-66099.processed.1"
 
@@ -22,6 +24,9 @@ data_path <- data.frame(Sample=rep("", N), Path=rep("", 1),
 
 files <- list.files(path=directory_path, pattern="*.txt", full.names=TRUE, recursive=FALSE)
 index <- 1
+
+use_python("/Applications/Python 3.7", required = TRUE)
+
 
 for (file in files) {
   sample_name <- str_extract(basename(file), "[^_]+")
@@ -74,6 +79,9 @@ negative_DEG <- tt %>%
   rownames_to_column('entrez_id') %>%
   dplyr::filter(logFC < 0) %>%
   column_to_rownames('entrez_id')
+
+write.table(positive_DEG, "upreg.txt", sep="\t")
+write.table(negative_DEG, "downreg.txt", sep="\t")
 
 rm(condition)
 rm(consolidated_df)
