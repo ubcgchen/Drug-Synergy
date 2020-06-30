@@ -1,3 +1,4 @@
+# Load in the libraries
 library(tidyverse)
 library(dplyr)
 library(limma)
@@ -5,9 +6,8 @@ library(conflicted)
 source("http://bioconductor.org/biocLite.R")
 library("AnnotationDbi")
 library("hgu133plus2.db")
-library(reticulate)
-library(xlsx)
 
+# Read in the processed data
 directory_path = "../Sepsis Data/E-GEOD-66099.processed.1"
 
 reference_matrix <- read.delim("../Sepsis Data/E-GEOD-66099.sdrf-ref-matrix.txt") %>%
@@ -24,9 +24,6 @@ data_path <- data.frame(Sample=rep("", N), Path=rep("", 1),
 
 files <- list.files(path=directory_path, pattern="*.txt", full.names=TRUE, recursive=FALSE)
 index <- 1
-
-use_python("/Applications/Python 3.7", required = TRUE)
-
 
 for (file in files) {
   sample_name <- str_extract(basename(file), "[^_]+")
@@ -51,7 +48,8 @@ for (condition in grouped_df) {
   }
 }
 
-rownames(expression_matrix) <- as.character(c(read.delim(grouped_df$control$Path[1], header = TRUE))$ID_REF)
+rownames(expression_matrix) <- as.character(
+  c(read.delim(grouped_df$control$Path[1], header = TRUE))$ID_REF)
 design_matrix <- cbind(1 , c(rep(0 , 47) , rep(1 , 18)))
 
 fit <- lmFit(expression_matrix , design_matrix)
