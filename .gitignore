@@ -2,3 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
+config.yml
+.DS_Store
+uptag.gmt
+dntag.gmt
+*.tar.gz
+*/

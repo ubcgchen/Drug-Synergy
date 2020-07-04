@@ -1,11 +1,10 @@
-# Load in the libraries
 library(tidyverse)
 library(dplyr)
 library(limma)
 library(conflicted)
-source("http://bioconductor.org/biocLite.R")
-library("AnnotationDbi")
-library("hgu133plus2.db")
+library(AnnotationDbi)
+library(hgu133plus2.db)
+library(cmapR)
 
 # Read in the processed data
 directory_path = "../Sepsis Data/E-GEOD-66099.processed.1"
@@ -34,7 +33,7 @@ for (file in files) {
   }
 }
 
-consolidated_df <- merge(x = reference_matrix, y = data_path, by = "Sample", all = TRUE)
+consolidated_df <- S4Vectors::merge(x = reference_matrix, y = data_path, by = "Sample", all = TRUE)
 grouped_df <- split(consolidated_df, consolidated_df$Condition)
 
 expression_matrix <- data.frame()[1:54675, ]
@@ -54,7 +53,7 @@ design_matrix <- cbind(1 , c(rep(0 , 47) , rep(1 , 18)))
 
 fit <- lmFit(expression_matrix , design_matrix)
 fit <- eBayes(fit)
-tt <- topTable(fit, coef = 2, adjust.method = "BH", sort.by = "p", number = 200)
+tt <- topTable(fit, coef = 2, adjust.method = "BH", sort.by = "p", number = 700)
 
 affy_entrez_map <- AnnotationDbi::select(hgu133plus2.db, row.names(tt), c("ENTREZID")) %>%
   na.omit()
@@ -64,22 +63,39 @@ tt <- as.data.frame(inner_join(affy_entrez_map, tt))
 tt <- aggregate(list(logFC = tt$logFC, AveExpr = tt$AveExpr, t = tt$t, 
                  P.Value = tt$ P.Value, adj.P.Val = tt$adj.P.Val, B = tt$B), 
             by=list(ENTREZID = tt$ENTREZID), FUN=mean) %>%
-  arrange(desc(abs(t))) %>%
+  arrange(dplyr::desc(abs(t))) %>%
   column_to_rownames('ENTREZID')
 tt <- tt[ , !(names(tt) %in% c("PROBEID"))]
 
 positive_DEG <- tt %>% 
   rownames_to_column('entrez_id') %>%
   dplyr::filter(logFC > 0) %>%
-  column_to_rownames('entrez_id')
+  column_to_rownames('entrez_id') %>%
+  head(150)
 
 negative_DEG <- tt %>% 
   rownames_to_column('entrez_id') %>%
   dplyr::filter(logFC < 0) %>%
-  column_to_rownames('entrez_id')
+  column_to_rownames('entrez_id') %>%
+  head(150)
 
-write.table(as.numeric(row.names(positive_DEG)), "upreg.txt", sep="\t")
-write.table(as.numeric(row.names(negative_DEG)), "downreg.txt", sep="\t")
+TAG_DN <- list()
+TAG_DN$head = "TAG_DN"
+TAG_DN$desc = ""
+TAG_DN$entry = row.names(negative_DEG)
+TAG_DN$len = length(row.names((negative_DEG)))
+to_write <- list()
+to_write$TAG_DN <- TAG_DN
+write_gmt(to_write, "dntag.gmt")
+
+TAG_UP <- list()
+TAG_UP$head = "TAG_UP"
+TAG_UP$desc = ""
+TAG_UP$entry = row.names(positive_DEG)
+TAG_UP$len = length(row.names((positive_DEG)))
+to_write <- list()
+to_write$TAG_UP <- TAG_UP
+write_gmt(to_write, "uptag.gmt")
 
 rm(condition)
 rm(consolidated_df)
