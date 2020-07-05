@@ -1,3 +1,7 @@
+# Output is 2 files: uptag.gmt and dntag.gmt. These files are the top 150 most
+# up- and down-regulated genes in the disease signature and can directly be
+# used to query CMap
+
 library(tidyverse)
 library(dplyr)
 library(limma)
