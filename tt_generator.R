@@ -27,8 +27,7 @@ load_SDRF <- function(AE_data) {
   SDRF <- read.delim(sdrf_location) %>%
     rename_at(vars(col_names), ~ c('Sample','Condition')) %>% 
     dplyr::select(1, 5) %>% 
-    dplyr::filter(Condition == "sepsis" | 
-                    Condition == "control")
+    dplyr::filter(select_sdrf_rows())
   SDRF$Sample <- word(SDRF$Sample, 1)
   SDRF$Condition <- factor(SDRF$Condition)
   return(SDRF)
@@ -143,6 +142,10 @@ write_gmt_files <- function(positive_DEG, negative_DEG) {
 
 accession_code <- "E-GEOD-66099"
 col_names <- c('Source.Name', 'Characteristics..disease.')
+select_sdrf_rows <- function() {
+  return(Condition == "sepsis" | 
+           Condition == "control")
+}
 
 AE_data <- download_AE_data()
 SDRF <- load_SDRF(AE_data)
