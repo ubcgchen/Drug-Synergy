@@ -9,29 +9,6 @@ library(conflicted)
 library(AnnotationDbi)
 library(hgu133plus2.db)
 library(cmapR)
-library(ArrayExpress)
-
-download_AE_data <- function() {
-  AE_data <- tempdir()
-  if (!dir.exists(AE_data)) {
-    dir.create(AE_data)
-  }
-  getAE(accession_code, path = AE_data, type = "processed")
-  return(AE_data)
-}
-
-load_SDRF <- function(AE_data) {
-  sdrf_location <- file.path(AE_data, base::paste(accession_code, ".sdrf.txt",
-                                                  sep = ""))
-  # Parse and process the SDRF matrix
-  SDRF <- read.delim(sdrf_location) %>%
-    rename_at(vars(col_names), ~ c('Sample','Condition')) %>% 
-    dplyr::select(1, 5) %>% 
-    dplyr::filter(select_sdrf_rows())
-  SDRF$Sample <- word(SDRF$Sample, 1)
-  SDRF$Condition <- factor(SDRF$Condition)
-  return(SDRF)
-}
 
 get_file_paths <- function(AE_data) {
   files <- list.files(path=AE_data, pattern="*.txt", full.names=TRUE, recursive=FALSE)
@@ -51,12 +28,13 @@ get_file_paths <- function(AE_data) {
   return(data_path)
 }
 
-build_expression_matrix <- function(file_paths, SDRF) {
+build_expression_matrix <- function(file_paths, SDRF, control) {
   consolidated_df <- S4Vectors::merge(x = SDRF, y = file_paths, 
                                       by = "Sample", all = TRUE)
   grouped_df <- split(consolidated_df, consolidated_df$Condition)
   
-  expression_matrix <- data.frame()[1:54675, ]
+  file_len <- nrow(read.delim(grouped_df[[control]]$Path[1], header = TRUE))
+  expression_matrix <- data.frame()[1:file_len, ]
   
   for (condition in grouped_df) {
     index <- 1
@@ -70,13 +48,13 @@ build_expression_matrix <- function(file_paths, SDRF) {
   }
   
   rownames(expression_matrix) <- as.character(
-    c(read.delim(grouped_df$control$Path[1], header = TRUE))$ID_REF)
+    c(read.delim(grouped_df[[control]]$Path[1], header = TRUE))$ID_REF)
   
-  return(expression_matrix)
+  return(list(expression_matrix, grouped_df))
 }
 
-build_design_matrix <- function() {
-  return(cbind(1 , c(rep(0 , 47) , rep(1 , 18))))
+build_design_matrix <- function(control, condition) {
+  return(cbind(1 , c(rep(0 , control) , rep(1 , condition))))
 }
 
 fit_data <- function(expression_matrix, design_matrix) {
@@ -140,34 +118,16 @@ write_gmt_files <- function(positive_DEG, negative_DEG) {
   write_gmt(to_write, "uptag.gmt")
 }
 
-accession_code <- "E-GEOD-66099"
-col_names <- c('Source.Name', 'Characteristics..disease.')
-select_sdrf_rows <- function() {
-  return(Condition == "sepsis" | 
-           Condition == "control")
-}
-
-AE_data <- download_AE_data()
-SDRF <- load_SDRF(AE_data)
-file_paths <- get_file_paths(AE_data)
-
-expression_matrix <- build_expression_matrix(file_paths, SDRF)
-design_matrix <- build_design_matrix()
-
-top_table <- fit_data(expression_matrix, design_matrix)
-top_table <- affy_to_entrez(top_table)
-
-positive_DEG <- generate_DEG_table(greater_than_zero, top_table)
-negative_DEG <- generate_DEG_table(less_than_zero, top_table)
-
-write_gmt_files(positive_DEG, negative_DEG)
-
-rm(design_matrix)
-rm(expression_matrix)
-rm(file_paths)
-rm(negative_DEG)
-rm(positive_DEG)
-rm(SDRF)
-rm(accession_code)
-rm(col_names)
-rm(AE_data)
+# files <- list.files(AE_data, full.names = TRUE)
+# file.remove(files)
+# unlink(AE_data, recursive = TRUE)
+# 
+# rm(design_matrix)
+# rm(expression_matrix)
+# rm(file_paths)
+# rm(negative_DEG)
+# rm(positive_DEG)
+# rm(SDRF)
+# rm(accession_code)
+# rm(col_names)
+# rm(AE_data)

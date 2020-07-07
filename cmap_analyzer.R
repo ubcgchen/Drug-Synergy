@@ -94,10 +94,10 @@ process_cmap_data <- function(ds) {
   return(top_drugs)
 }
 
-poll <- query_cmap("GSE66099_up150_dn150")
-download_cmap_data(poll)
-ds <- load_cmap_data(poll$job_id)
-top_drugs <- process_cmap_data(ds)
-
-rm(ds)
-rm(poll)
+# poll <- query_cmap("GSE66099_up150_dn150")
+# download_cmap_data(poll)
+# ds <- load_cmap_data(poll$job_id)
+# top_drugs <- process_cmap_data(ds)
+# 
+# rm(ds)
+# rm(poll)
