@@ -1,14 +1,20 @@
 library(shiny)
 library(shinythemes)
 library(DT)
-library(shinycssloaders)
+library(shinyalert)
+library(shinybusy)
 
 # UI
 ui <- fluidPage(theme = shinytheme("paper"),
+                includeCSS("styles.css"),
+                useShinyalert(),
+                shinyjs::useShinyjs(),
                 sidebarPanel(
-                textInput("accession_code", "GEO Accession Code:", ""), # default value
+                textInput("accession_code", "GEO Accession Code:", "E-GEOD-28750",
+                          placeholder = "E-GEOD-XXXXX"),
                 actionButton("geo","Submit GEO Accession Code")
                 ),
+                add_busy_bar(color = "#48D1CC"),
                 uiOutput("sdrf_header"),
                 uiOutput("dropdown_sample"),
                 uiOutput("dropdown_condition"),
@@ -19,136 +25,118 @@ ui <- fluidPage(theme = shinytheme("paper"),
                 uiOutput("select_condition_level"),
                 uiOutput("select_control_level"),
                 uiOutput("submit_levels"),
+                uiOutput("raw_sdrf_back_button"),
                 uiOutput("positive_DEG_Tag"),
                 DT::dataTableOutput("positive_DEG"),
                 uiOutput("negative_DEG_Tag"),
                 DT::dataTableOutput("negative_DEG"),
                 uiOutput("confirm_DEG"),
-                DT::dataTableOutput("top_drugs"),
+                DT::dataTableOutput("top_drugs")
                 )
 
 # Server
 server <- function(input, output) {
   observeEvent(input$geo, {
     
-    if (input$accession_code != ""){
+    if(input$accession_code == "") {
+      shinyalert("Error", "You must provide an Accession Code!", type = "error")
+    } else{
       source("SDRF_loader.R")
-      # AE_data <- download_AE_data(input$accession_code)
-      SDRF <<- load_SDRF(AE_data, input$accession_code)
-
-      output$dropdown_sample <- renderUI({
-        selectInput(inputId = "select_sample", 
-                    label = "Select the column containing sample names", 
-                    choices = names(SDRF),
-                    multiple = F)
-      })
       
-      output$dropdown_condition <- renderUI({
-        selectInput(inputId = "select_condition", 
-                    label = "Select the column containing the condition", 
-                    choices = names(SDRF),
-                    multiple = F)
-      })
+      # AE_data <<- tryCatch(
+      #   {download_AE_data(input$accession_code)},
+      #   warning=function(cond) {
+      #     shinyalert("Invalid Accession Code",
+      #                "Check your spelling and follow the suggested format",
+      #                type = "error")
+      #     return(NULL)
+      #   }
+      # )
       
-      output$text_prefix <- renderUI({
-        textInput(inputId = "text_prefix",
-                  label = "The SDRF file names may include unnecessary prefixes or suffixes. Below, enter the prefixes and suffixes you would like ignored during analysis",
-                  placeholder = "prefix")
-      })
-      
-      output$text_suffix <- renderUI({
-        textInput(inputId = "text_suffix",
-                  label = "",
-                  placeholder = "suffix")
-      })
-      
-      output$update_sdrf_table <- renderUI({
-        actionButton("sdrf","Update SDRF", icon("refresh"))
-      })
-      
-      output$raw_SDRF <- DT::renderDataTable({
-        SDRF
-      })
+      if (!is.null(AE_data)) {
+        SDRF <<- load_SDRF(AE_data, input$accession_code)
+        source("raw_SDRF_page.R")
+        output <- render_raw_SDRF_page(input, output)
+      }
     }
+  })
+  
+  observeEvent(input$raw_sdrf_back_button, {
+    shinyjs::hide(id = "select_control_level")
+    shinyjs::hide(id = "select_condition_level")
+    shinyjs::hide(id = "submit_levels")
+    shinyjs::hide(id = "raw_sdrf_back_button")
+    
+    shinyjs::show(id = "dropdown_sample")
+    shinyjs::show(id = "dropdown_condition")
+    shinyjs::show(id = "sdrf")
+    shinyjs::show(id = "raw_SDRF")
+    shinyjs::show(id = "text_prefix")
+    shinyjs::show(id = "text_suffix")
   })
   
   observeEvent(input$sdrf, {
     source("SDRF_loader.R")
-    SDRF <<- update_sdrf(SDRF, c(input$select_sample, input$select_condition),
-                         input$text_prefix, input$text_suffix)
+    sample_col_name <- input$select_sample
+    condition_col_name <- input$select_condition
     
-    removeUI("#dropdown_sample")
-    removeUI("#dropdown_condition")
-    removeUI("#sdrf")
-    removeUI("#raw_SDRF")
-    removeUI("#text_prefix")
-    removeUI("#text_suffix")
+    prefix <- input$text_prefix
+    suffix <- input$text_suffix
     
-    output$select_condition_level <- renderUI({
-      selectInput(inputId = "condition_level", 
-                         label = "Select the label for the condition", 
-                         choices = levels(SDRF$Condition)
-                         )
-    })
-    
-    output$select_control_level <- renderUI({
-      selectInput(inputId = "control_level", 
-                         label = "Select the label for the control", 
-                         choices = levels(SDRF$Condition)
-      )
-    })
-    
-    output$submit_levels <- renderUI({
-      actionButton("submit_levels","Submit Levels")
-    })
+    if (sample_col_name == condition_col_name) {
+      shinyalert("Selection Error", 
+                 "The sample column must be different from the condition column",
+                 type = "error")
+    } else {
+      updated_SDRF <<- tryCatch(
+          {update_sdrf(SDRF, c(sample_col_name, condition_col_name),
+                       prefix, suffix)},
+          error=function(cond) {
+            shinyalert("Invalid Prefix or Suffix",
+                       "Check to make sure your prefix or suffix are correctly spelled",
+                       type = "error")
+            return(NULL)
+          }
+        )
+      if (!is.null(updated_SDRF)) {
+        source("level_selection_page.R")
+        output <- render_level_selection_page(output)
+      }
+    }
   })
   
   observeEvent(input$submit_levels, {
-    source("SDRF_loader.R")
-    SDRF <<- filter_sdrf(SDRF, input$condition_level, input$control_level)
-    removeUI("#select_control_level")
-    removeUI("#select_condition_level")
-    removeUI("#submit_levels")
+    conditions = input$condition_level
+    controls = input$control_level
     
-    source("tt_generator.R")
-    
-    file_paths <<- get_file_paths(AE_data)
-    
-    res <- build_expression_matrix(file_paths, SDRF, input$control_level)
-    expression_matrix <- res[[1]]
-    grouped_df <- res[[2]]
-    design_matrix <- build_design_matrix(nrow(grouped_df[[input$control_level]]),
-                                         nrow(grouped_df[[input$condition_level]]))
-
-    top_table <- fit_data(expression_matrix, design_matrix)
-    top_table <- affy_to_entrez(top_table)
-
-    positive_DEG <- generate_DEG_table(greater_than_zero, top_table)
-    negative_DEG <- generate_DEG_table(less_than_zero, top_table)
-
-    write_gmt_files(positive_DEG, negative_DEG)
-    
-    output$positive_DEG_Tag <- renderUI({
-      HTML(base::paste('<br/>', '<br/>', '<br/>','<br/>', '<br/>', '<br/>', '<br/>','<br/>',
-                       h4("Top 150 up-regulated genes")))
-    })
-    
-    output$positive_DEG <- DT::renderDataTable({
-      positive_DEG
-    })
-    
-    output$negative_DEG_Tag <- renderUI({
-      HTML(base::paste('<br/>', '<br/>',
-                       h4("Top 150 down-regulated genes")))
-    })
-    
-    output$negative_DEG <- DT::renderDataTable({
-      negative_DEG
-    })
-    
-    output$confirm_DEG <- renderUI({
-      actionButton("confirm_DEG","Submit Query to CMap")
-    })
+    if (length(intersect(conditions, controls)) != 0) {
+      shinyalert("Invalid Selection",
+                 "Condition and control levels cannot intersect",
+                 type = "error")
+    } else {
+      source("SDRF_loader.R")
+      filtered_SDRF <<- filter_sdrf(updated_SDRF, conditions, controls)
+      
+      source("tt_generator.R")
+      file_paths <<- get_file_paths(AE_data, filtered_SDRF)
+      
+      res <- build_expression_matrix(file_paths, filtered_SDRF)
+      expression_matrix <- res[[1]]
+      grouped_df <- res[[2]]
+      design_matrix <- build_design_matrix(nrow(grouped_df$control),
+                                           nrow(grouped_df$condition))
+      
+      top_table <- fit_data(expression_matrix, design_matrix)
+      top_table <- affy_to_entrez(top_table)
+      
+      positive_DEG <- generate_DEG_table(greater_than_zero, top_table)
+      negative_DEG <- generate_DEG_table(less_than_zero, top_table)
+      
+      write_gmt_files(positive_DEG, negative_DEG)
+      
+      source("top_table_page.R")
+      render_top_table_page(output, positive_DEG, negative_DEG)
+    }
   })
   
   observeEvent(input$confirm_DEG, {
@@ -160,10 +148,10 @@ server <- function(input, output) {
     
     source("cmap_analyzer.R")
     
-    poll <- query_cmap(base::paste(input$accession_code, "_up150_dn150", sep = ""))
-    download_cmap_data(poll)
-    ds <- load_cmap_data(poll$job_id)
-    top_drugs <<- process_cmap_data(ds)
+    # poll <- query_cmap(base::paste(input$accession_code, "_up150_dn150", sep = ""))
+    # download_cmap_data(poll)
+    # ds <- load_cmap_data(poll$job_id)
+    # top_drugs <<- process_cmap_data(ds)
     
     output$top_drugs <- DT::renderDataTable({
       top_drugs

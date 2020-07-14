@@ -10,10 +10,10 @@ library(AnnotationDbi)
 library(hgu133plus2.db)
 library(cmapR)
 
-get_file_paths <- function(AE_data) {
+get_file_paths <- function(AE_data, SDRF) {
   files <- list.files(path=AE_data, pattern="*.txt", full.names=TRUE, recursive=FALSE)
   
-  data_path <- data.frame(Sample=rep("", nrow(SDRF)), Path=rep("", 1),
+  data_path <- data.frame(Sample=rep(NA, nrow(SDRF)), Path=rep(NA, 1),
                           stringsAsFactors=FALSE)
   
   index<-1
@@ -28,12 +28,12 @@ get_file_paths <- function(AE_data) {
   return(data_path)
 }
 
-build_expression_matrix <- function(file_paths, SDRF, control) {
+build_expression_matrix <- function(file_paths, SDRF) {
   consolidated_df <- S4Vectors::merge(x = SDRF, y = file_paths, 
                                       by = "Sample", all = TRUE)
   grouped_df <- split(consolidated_df, consolidated_df$Condition)
   
-  file_len <- nrow(read.delim(grouped_df[[control]]$Path[1], header = TRUE))
+  file_len <- nrow(read.delim(grouped_df$control$Path[1], header = TRUE))
   expression_matrix <- data.frame()[1:file_len, ]
   
   for (condition in grouped_df) {
@@ -48,7 +48,7 @@ build_expression_matrix <- function(file_paths, SDRF, control) {
   }
   
   rownames(expression_matrix) <- as.character(
-    c(read.delim(grouped_df[[control]]$Path[1], header = TRUE))$ID_REF)
+    c(read.delim(grouped_df$control$Path[1], header = TRUE))$ID_REF)
   
   return(list(expression_matrix, grouped_df))
 }
