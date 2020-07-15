@@ -11,7 +11,8 @@ library(hgu133plus2.db)
 library(cmapR)
 
 get_file_paths <- function(AE_data, SDRF) {
-  files <- list.files(path=AE_data, pattern="*.txt", full.names=TRUE, recursive=FALSE)
+  files <- list.files(path=AE_data, pattern="*.txt", 
+                      full.names=TRUE, recursive=FALSE)
   
   data_path <- data.frame(Sample=rep(NA, nrow(SDRF)), Path=rep(NA, 1),
                           stringsAsFactors=FALSE)
@@ -25,6 +26,12 @@ get_file_paths <- function(AE_data, SDRF) {
       index = index + 1
     }
   }
+  
+  if (any(is.na(data_path))) {
+    stop(base::paste("Please go back and check to make sure you", 
+                      "selected the correct sample column and/or have", 
+                      "the correct prefix and suffix"))
+  }
   return(data_path)
 }
 
@@ -32,6 +39,7 @@ build_expression_matrix <- function(file_paths, SDRF) {
   consolidated_df <- S4Vectors::merge(x = SDRF, y = file_paths, 
                                       by = "Sample", all = TRUE)
   grouped_df <- split(consolidated_df, consolidated_df$Condition)
+  test<<-grouped_df
   
   file_len <- nrow(read.delim(grouped_df$control$Path[1], header = TRUE))
   expression_matrix <- data.frame()[1:file_len, ]
@@ -117,17 +125,3 @@ write_gmt_files <- function(positive_DEG, negative_DEG) {
   to_write$TAG_UP <- TAG_UP
   write_gmt(to_write, "uptag.gmt")
 }
-
-# files <- list.files(AE_data, full.names = TRUE)
-# file.remove(files)
-# unlink(AE_data, recursive = TRUE)
-# 
-# rm(design_matrix)
-# rm(expression_matrix)
-# rm(file_paths)
-# rm(negative_DEG)
-# rm(positive_DEG)
-# rm(SDRF)
-# rm(accession_code)
-# rm(col_names)
-# rm(AE_data)

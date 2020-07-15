@@ -24,6 +24,9 @@ ui <- fluidPage(theme = shinytheme("paper"),
                 DT::dataTableOutput("raw_SDRF"),
                 uiOutput("select_condition_level"),
                 uiOutput("select_control_level"),
+                uiOutput("add_filter"),
+                uiOutput("remove_filter"),
+                uiOutput("newInputs"),
                 uiOutput("submit_levels"),
                 uiOutput("raw_sdrf_back_button"),
                 uiOutput("positive_DEG_Tag"),
@@ -31,42 +34,97 @@ ui <- fluidPage(theme = shinytheme("paper"),
                 uiOutput("negative_DEG_Tag"),
                 DT::dataTableOutput("negative_DEG"),
                 uiOutput("confirm_DEG"),
+                uiOutput("level_selection_back_button"),
                 DT::dataTableOutput("top_drugs")
                 )
 
 # Server
 server <- function(input, output) {
+  
+  # Triggered when the GEO Accession Code is submitted
   observeEvent(input$geo, {
     
-    if(input$accession_code == "") {
-      shinyalert("Error", "You must provide an Accession Code!", type = "error")
-    } else{
+    tryCatch({
+      # download data from ArrayExpress, load the SDRF file, and render it
       source("SDRF_loader.R")
-      
-      # AE_data <<- tryCatch(
-      #   {download_AE_data(input$accession_code)},
-      #   warning=function(cond) {
-      #     shinyalert("Invalid Accession Code",
-      #                "Check your spelling and follow the suggested format",
-      #                type = "error")
-      #     return(NULL)
-      #   }
-      # )
-      
-      if (!is.null(AE_data)) {
-        SDRF <<- load_SDRF(AE_data, input$accession_code)
-        source("raw_SDRF_page.R")
-        output <- render_raw_SDRF_page(input, output)
-      }
-    }
+      # download_AE_data(input$accession_code)
+      SDRF <<- load_SDRF(AE_data, input$accession_code)
+      source("raw_SDRF_page.R")
+      output <- render_raw_SDRF_page(input, output)
+    },
+    
+    error=function(cond) {
+      shinyalert("Invalid Accession Code", cond$message, type = "error")
+      })
+    
+    })
+  
+  filters <- reactiveValues(
+    input_filters = list()
+  )
+  
+  observeEvent(input$add_filter, {
+    isolate({
+        id <- base::paste(
+          "filter", isolate(length(filters$input_filters)) + 1, sep = "")
+        filters$input_filters <- c(
+          filters$input_filters, list(c(id, input$test, "")))
+      })
+  
+    filters
+    
+    source("filters.R")
+    output <- render_filters(output, filters)
+    
   })
   
+  observeEvent(input$remove_filter, {
+    isolate({
+      filters$input_filters <- 
+        filters$input_filters[-length(filters$input_filters)]
+    })
+    
+    filters
+    
+    source("filters.R")
+    output <- render_filters(output, filters)
+  })
+  
+  # Triggered when the user submits manually inputted SDRF details
+  observeEvent(input$sdrf, {
+    
+    # load input variables
+    sample_col_name <- input$select_sample
+    condition_col_name <- input$select_condition
+    prefix <- input$text_prefix
+    suffix <- input$text_suffix
+    
+    tryCatch({
+      # Update SDRF based on user-provided SDRF details and render the next page
+      source("SDRF_loader.R")
+      updated_SDRF <<- update_sdrf(SDRF, c(sample_col_name, condition_col_name),
+                                   prefix, suffix)
+
+      source("level_selection_page.R")
+      output <- render_level_selection_page(output)
+    },
+    
+    error=function(cond) {
+      shinyalert("Selection Error", cond$message, type = "error")
+    })
+    
+  })
+  
+  # Triggered when user wants to go from the level selection page back to the 
+  # raw SDRF page
   observeEvent(input$raw_sdrf_back_button, {
+    # hide level selection page
     shinyjs::hide(id = "select_control_level")
     shinyjs::hide(id = "select_condition_level")
     shinyjs::hide(id = "submit_levels")
     shinyjs::hide(id = "raw_sdrf_back_button")
     
+    # show raw sdrf page
     shinyjs::show(id = "dropdown_sample")
     shinyjs::show(id = "dropdown_condition")
     shinyjs::show(id = "sdrf")
@@ -75,45 +133,14 @@ server <- function(input, output) {
     shinyjs::show(id = "text_suffix")
   })
   
-  observeEvent(input$sdrf, {
-    source("SDRF_loader.R")
-    sample_col_name <- input$select_sample
-    condition_col_name <- input$select_condition
-    
-    prefix <- input$text_prefix
-    suffix <- input$text_suffix
-    
-    if (sample_col_name == condition_col_name) {
-      shinyalert("Selection Error", 
-                 "The sample column must be different from the condition column",
-                 type = "error")
-    } else {
-      updated_SDRF <<- tryCatch(
-          {update_sdrf(SDRF, c(sample_col_name, condition_col_name),
-                       prefix, suffix)},
-          error=function(cond) {
-            shinyalert("Invalid Prefix or Suffix",
-                       "Check to make sure your prefix or suffix are correctly spelled",
-                       type = "error")
-            return(NULL)
-          }
-        )
-      if (!is.null(updated_SDRF)) {
-        source("level_selection_page.R")
-        output <- render_level_selection_page(output)
-      }
-    }
-  })
-  
+  # Triggered when the user submits their level selection
   observeEvent(input$submit_levels, {
+    # Load variables
     conditions = input$condition_level
     controls = input$control_level
-    
-    if (length(intersect(conditions, controls)) != 0) {
-      shinyalert("Invalid Selection",
-                 "Condition and control levels cannot intersect",
-                 type = "error")
-    } else {
+      
+    tryCatch({
+      
       source("SDRF_loader.R")
       filtered_SDRF <<- filter_sdrf(updated_SDRF, conditions, controls)
       
@@ -123,6 +150,7 @@ server <- function(input, output) {
       res <- build_expression_matrix(file_paths, filtered_SDRF)
       expression_matrix <- res[[1]]
       grouped_df <- res[[2]]
+      
       design_matrix <- build_design_matrix(nrow(grouped_df$control),
                                            nrow(grouped_df$condition))
       
@@ -136,26 +164,48 @@ server <- function(input, output) {
       
       source("top_table_page.R")
       render_top_table_page(output, positive_DEG, negative_DEG)
-    }
+      },
+      
+      error = function(cond) {
+        test <<- cond
+        shinyalert("Processing Error", cond$message, type = "error")
+      })
   })
   
+  # Triggered when user wants to go from the top table page back to the level
+  # selection page
+  observeEvent(input$level_selection_back_button, {
+    # hide top table page
+    shinyjs::hide(id = "positive_DEG_Tag")
+    shinyjs::hide(id = "positive_DEG")
+    shinyjs::hide(id = "negative_DEG_Tag")
+    shinyjs::hide(id = "negative_DEG")
+    shinyjs::hide(id = "confirm_DEG")
+    shinyjs::hide(id = "level_selection_back_button")
+    
+    # show level selection page
+    shinyjs::show(id = "select_control_level")
+    shinyjs::show(id = "select_condition_level")
+    shinyjs::show(id = "submit_levels")
+    shinyjs::show(id = "raw_sdrf_back_button")
+  })
+  
+  # Triggered when user confirms the top tables and submits the CMap query.
   observeEvent(input$confirm_DEG, {
-    removeUI("#positive_DEG_Tag")
-    removeUI("#negative_DEG_Tag")
-    removeUI("#positive_DEG")
-    removeUI("#negative_DEG")
-    removeUI("#confirm_DEG")
     
     source("cmap_analyzer.R")
     
-    # poll <- query_cmap(base::paste(input$accession_code, "_up150_dn150", sep = ""))
-    # download_cmap_data(poll)
-    # ds <- load_cmap_data(poll$job_id)
-    # top_drugs <<- process_cmap_data(ds)
+    # query and retrieve CMap data
+    poll <- query_cmap(base::paste(input$accession_code, "_up150_dn150", sep = ""))
+    download_cmap_data(poll)
     
-    output$top_drugs <- DT::renderDataTable({
-      top_drugs
-    })
+    # load and process CMap results
+    ds <- load_cmap_data(poll$job_id)
+    top_drugs <<- process_cmap_data(ds)
+    
+    source("cmap_results_page.R")
+    output <- render_cmap_results_page(output)
+    
   })
 }
 

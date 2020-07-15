@@ -21,12 +21,20 @@ render_level_selection_page <- function(output) {
     )
   })
   
+  output$add_filter <- renderUI({
+    actionButton("add_filter", "Add Filter", icon("plus", lib = "glyphicon"))
+  })
+  
+  output$remove_filter <- renderUI({
+    actionButton("remove_filter", "Remove Filter", icon("minus", lib = "glyphicon"))
+  })
+  
   output$submit_levels <- renderUI({
-    actionButton("submit_levels","Submit Levels")
+    actionButton("submit_levels","Submit Levels", icon("ok", lib = "glyphicon"))
   })
   
   output$raw_sdrf_back_button <- renderUI({
-    actionButton("raw_sdrf_back_button","Back")
+    actionButton("raw_sdrf_back_button","Back", icon("arrow-left", lib = "glyphicon"))
   })
   
   shinyjs::show(id = "select_control_level")

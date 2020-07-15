@@ -28,7 +28,7 @@ render_raw_SDRF_page <- function(input, output) {
   })
   
   output$update_sdrf_table <- renderUI({
-    actionButton("sdrf","Update SDRF", icon("refresh"))
+    actionButton("sdrf","Update SDRF", icon("refresh", lib = "glyphicon"))
   })
   
   output$raw_SDRF <- DT::renderDataTable({

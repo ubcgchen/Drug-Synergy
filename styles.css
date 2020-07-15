@@ -5,3 +5,30 @@
 #update_sdrf_table {
     margin-bottom: 10px;
 }
+
+#confirm_DEG {
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+#level_selection_back_button {
+    margin-bottom: 10px;
+}
+
+#add_filter {
+    display: inline-block;
+    width: auto;
+    margin-bottom: 10px;
+    margin-right: 10px;
+}
+
+#remove_filter {
+    display: inline-block;
+    width: auto;
+    margin-bottom: 10px;
+}
+
+#newInputs > div {
+    display: inline-block;
+    width: 100px;
+}

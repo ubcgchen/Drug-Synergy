@@ -23,7 +23,13 @@ render_top_table_page <- function(output, positive_DEG, negative_DEG) {
   })
   
   output$confirm_DEG <- renderUI({
-    actionButton("confirm_DEG","Submit Query to CMap")
+    actionButton("confirm_DEG","Submit Query to CMap",
+                 icon("ok", lib = "glyphicon"))
+  })
+  
+  output$level_selection_back_button <- renderUI({
+    actionButton("level_selection_back_button", "Back", 
+                 icon("arrow-left", lib = "glyphicon"))
   })
   
   shinyjs::show(id = "positive_DEG_Tag")
@@ -31,4 +37,5 @@ render_top_table_page <- function(output, positive_DEG, negative_DEG) {
   shinyjs::show(id = "negative_DEG_Tag")
   shinyjs::show(id = "negative_DEG")
   shinyjs::show(id = "confirm_DEG")
+  shinyjs::show(id = "level_selection_back_button")
 }
