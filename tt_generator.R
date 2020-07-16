@@ -98,12 +98,28 @@ less_than_zero <- function(num) {
   return(num < 0)
 }
 
-generate_DEG_table <- function(func, tt) {
+generate_DEG_table <- function(func, tt, filters, num_genes) {
+  num_genes <- as.numeric(num_genes)
+  if (is.na(num_genes)) stop("number of genes must be a number")
+  if (num_genes > 150) stop("number of genes must be <= 150")
   return(tt %>% 
            rownames_to_column('entrez_id') %>%
            dplyr::filter(func(logFC)) %>%
            column_to_rownames('entrez_id') %>%
-           head(150))
+           apply_user_filters(filters) %>%
+           head(num_genes))
+}
+
+apply_user_filters <- function(tt, filters){
+  for (filter in filters) {
+    source("filter_functions.R")
+    column <- filter[1]
+    func <- get_func(filter[2])
+    value <- as.numeric(filter[3])
+    if (is.na(value)) stop("filter value must be a number")
+    tt <- dplyr::filter(tt, func(tt[[column]], value))
+  }
+  return(tt)
 }
 
 write_gmt_files <- function(positive_DEG, negative_DEG) {

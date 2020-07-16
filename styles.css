@@ -22,6 +22,16 @@
     margin-right: 10px;
 }
 
+#num_downgenes_custom {
+    width: 70px;
+    height: auto;
+}
+
+#num_upgenes_custom {
+    width: 70px;
+    height: auto;
+}
+
 #remove_filter {
     display: inline-block;
     width: auto;
@@ -32,3 +42,21 @@
     display: inline-block;
     width: 100px;
 }
+
+#positive_DEG_Tag {
+    margin-top: 180px;
+}
+
+#negative_DEG_Tag {
+    margin-top: 20px;
+}
+
+#reset {
+    background-color: #008CBA;
+    opacity: 0.6;
+    color: white;
+    font-size: 16px;
+    margin-top: 50px;
+    margin-left: 170px;
+}
+

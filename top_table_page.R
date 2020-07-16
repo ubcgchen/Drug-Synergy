@@ -1,12 +1,11 @@
-render_top_table_page <- function(output, positive_DEG, negative_DEG) {
-  shinyjs::hide(id = "select_control_level")
-  shinyjs::hide(id = "select_condition_level")
-  shinyjs::hide(id = "submit_levels")
-  shinyjs::hide(id = "raw_sdrf_back_button")
+render_top_table_page <- function(output, positive_DEG, negative_DEG, 
+                                  num_upgenes, num_downgenes) {
   
+  source("level_selection_page.R")
+  manage_level_selection_page(shinyjs::hide)
+
   output$positive_DEG_Tag <- renderUI({
-    HTML(base::paste('<br/>', '<br/>', '<br/>','<br/>', '<br/>', '<br/>', '<br/>','<br/>',
-                     h4("Top 150 up-regulated genes")))
+    h4(base::paste("Top", num_upgenes, "up-regulated genes"))
   })
   
   output$positive_DEG <- DT::renderDataTable({
@@ -14,8 +13,7 @@ render_top_table_page <- function(output, positive_DEG, negative_DEG) {
   })
   
   output$negative_DEG_Tag <- renderUI({
-    HTML(base::paste('<br/>', '<br/>',
-                     h4("Top 150 down-regulated genes")))
+    h4(base::paste("Top", num_downgenes, "down-regulated genes"))
   })
   
   output$negative_DEG <- DT::renderDataTable({
@@ -32,10 +30,14 @@ render_top_table_page <- function(output, positive_DEG, negative_DEG) {
                  icon("arrow-left", lib = "glyphicon"))
   })
   
-  shinyjs::show(id = "positive_DEG_Tag")
-  shinyjs::show(id = "positive_DEG")
-  shinyjs::show(id = "negative_DEG_Tag")
-  shinyjs::show(id = "negative_DEG")
-  shinyjs::show(id = "confirm_DEG")
-  shinyjs::show(id = "level_selection_back_button")
+  manage_top_table_page(shinyjs::show)
+}
+
+manage_top_table_page <- function (func) {
+  func(id = "positive_DEG_Tag")
+  func(id = "positive_DEG")
+  func(id = "negative_DEG_Tag")
+  func(id = "negative_DEG")
+  func(id = "confirm_DEG")
+  func(id = "level_selection_back_button")
 }

@@ -18,6 +18,7 @@ library(jsonlite)
 library(config)
 
 build_request_body <- function(query_name) {
+  # Set POST request body settings
   req_body <- list(
     tool_id="sig_gutc_tool",
     "uptag-cmapfile"=upload_file("uptag.gmt"),
@@ -41,14 +42,23 @@ send_request <- function(req_body) {
 
 poll_cmap <- function(req) {
   repeat {
-    poll <- httr::GET(url=base::paste("http://api.clue.io/api/jobs/findByJobId/",
-                                      req$result$job_id, sep = ""),
-                      httr::add_headers(Accept = "application/json"),
-                      httr::add_headers(user_key = config::get("api_key"))) %>%
-      httr::content(as = 'text') %>% 
-      jsonlite::fromJSON()
-    if (!is.null(poll$download_status) && poll$download_status == "completed") break
-    Sys.sleep(60)
+    tryCatch({
+      poll <- httr::GET(url=base::paste("http://api.clue.io/api/jobs/findByJobId/",
+                                        req$result$job_id, sep = ""),
+                        httr::add_headers(Accept = "application/json"),
+                        httr::add_headers(user_key = config::get("api_key"))) %>%
+        httr::content(as = 'text') %>% 
+        jsonlite::fromJSON()
+      if (!is.null(poll$download_status) && poll$download_status == "completed") break
+      # Default is waiting 120 seconds between polls
+      Sys.sleep(120)
+    },
+    error = function(cond) {
+     # silently ignore error and try again (errors usually due to network)
+    },
+    warning = function(cond) {
+      #silently ignore warning and try again (errors usually due to network)
+    })
   }
   return(poll)
 }
@@ -94,10 +104,3 @@ process_cmap_data <- function(ds) {
   return(top_drugs)
 }
 
-# poll <- query_cmap("GSE66099_up150_dn150")
-# download_cmap_data(poll)
-# ds <- load_cmap_data(poll$job_id)
-# top_drugs <- process_cmap_data(ds)
-# 
-# rm(ds)
-# rm(poll)

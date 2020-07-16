@@ -1,18 +1,23 @@
-render_filters <- function(output, filters) {
+render_filters <- function(input, output, filters) {
   
   output$newInputs <- renderUI({
-    lapply(filters$input_filters, function(a) {
+    # for every filter
+    lapply(filters$input_filters, function(curr) {
       tagList(
-        selectInput(inputId = a[1], 
+        selectInput(inputId = base::paste(curr[1], "column", sep = ""),
                     label = "",
+                    selected = input[[base::paste(curr, "column", sep = "")]],
                     choices = c("logFC", "AveExpr", "t", "P.Value",
                                 "adj.P.Val", "B"),
                     multiple = F),
-        selectInput(inputId = a[1], 
+        selectInput(inputId = base::paste(curr[1], "comparator", sep = ""), 
                     label = "",
+                    selected = input[[base::paste(curr, "comparator", sep = "")]],
                     choices = c(">", ">=", "<", "<=", "="),
                     multiple = F),
-        textInput(a[1], a[2], value = a[3]),
+        textInput(inputId = base::paste(curr[1], "value", sep = ""),
+                  value = input[[base::paste(curr, "value", sep = "")]],
+                  label = ""),
         HTML("<br>")
       )
     })

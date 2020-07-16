@@ -1,11 +1,7 @@
 render_level_selection_page <- function(output) {
   
-  shinyjs::hide(id = "dropdown_sample")
-  shinyjs::hide(id = "dropdown_condition")
-  shinyjs::hide(id = "sdrf")
-  shinyjs::hide(id = "raw_SDRF")
-  shinyjs::hide(id = "text_prefix")
-  shinyjs::hide(id = "text_suffix")
+  source("raw_SDRF_page.R")
+  manage_raw_SDRF_page(shinyjs::hide)
   
   output$select_condition_level <- renderUI({
     checkboxGroupInput(inputId = "condition_level", 
@@ -19,6 +15,34 @@ render_level_selection_page <- function(output) {
                        label = "Select the label(s) for the control", 
                        choices = levels(updated_SDRF$Condition)
     )
+  })
+  
+  output$num_upgenes_select <- renderUI({
+    radioButtons(inputId = "num_upgenes_select",
+                 label = "Select the maximum 
+                 number of up-regulated genes you wish to 
+                 include in your final result",
+                 choices = c("10" = "10",
+                             "50" = "50",
+                             "100" = "100",
+                             "150 (default)" = "150",
+                             "custom" = "custom"),
+                 selected = "150",
+                 inline = TRUE)
+  })
+  
+  output$num_downgenes_select <- renderUI({
+    radioButtons(inputId = "num_downgenes_select",
+                 label = "Select the maximum 
+                 number of down-regulated genes you wish to 
+                 include in your final result",
+                 choices = c("10" = "10",
+                             "50" = "50",
+                             "100" = "100",
+                             "150 (default)" = "150",
+                             "custom" = "custom"),
+                 selected = "150",
+                 inline = TRUE)
   })
   
   output$add_filter <- renderUI({
@@ -37,10 +61,22 @@ render_level_selection_page <- function(output) {
     actionButton("raw_sdrf_back_button","Back", icon("arrow-left", lib = "glyphicon"))
   })
   
-  shinyjs::show(id = "select_control_level")
-  shinyjs::show(id = "select_condition_level")
-  shinyjs::show(id = "submit_levels")
-  shinyjs::show(id = "raw_sdrf_back_button")
+  manage_level_selection_page(shinyjs::show)
   
   return(output)
 }
+
+manage_level_selection_page <- function (func) {
+    func(id = "select_control_level")
+    func(id = "select_condition_level")
+    func(id = "submit_levels")
+    func(id = "raw_sdrf_back_button")
+    func(id = "num_upgenes_select")
+    func(id = "num_upgenes_custom")
+    func(id = "num_downgenes_select")
+    func(id = "num_downgenes_custom")
+    func(id = "add_filter")
+    func(id = "remove_filter")
+    func(id = "newInputs")
+}
+

@@ -35,5 +35,17 @@ render_raw_SDRF_page <- function(input, output) {
     SDRF
   })
   
+  manage_raw_SDRF_page(shinyjs::show)
+  
   return(output)
 }
+
+manage_raw_SDRF_page <- function(func) {
+  func(id = "dropdown_sample")
+  func(id = "dropdown_condition")
+  func(id = "sdrf")
+  func(id = "raw_SDRF")
+  func(id = "text_prefix")
+  func(id = "text_suffix")
+}
+
