@@ -10,98 +10,20 @@ library(AnnotationDbi)
 library(hgu133plus2.db)
 library(cmapR)
 
-get_file_paths <- function(AE_data, SDRF) {
-  files <- list.files(path=AE_data, pattern="*.txt", 
-                      full.names=TRUE, recursive=FALSE)
-  
-  data_path <- data.frame(Sample=rep(NA, nrow(SDRF)), Path=rep(NA, 1),
-                          stringsAsFactors=FALSE)
-  
-  index<-1
-  for (file in files) {
-    sample_name <- str_extract(basename(file), "[^_]+")
-    if (sample_name %in% SDRF$Sample) {
-      data_path[index, 1] <- sample_name
-      data_path[index, 2] <- file
-      index = index + 1
-    }
-  }
-  
-  if (any(is.na(data_path))) {
-    stop(base::paste("Please go back and check to make sure you", 
-                      "selected the correct sample column and/or have", 
-                      "the correct prefix and suffix"))
-  }
-  return(data_path)
-}
-
-build_expression_matrix <- function(file_paths, SDRF) {
-  consolidated_df <- S4Vectors::merge(x = SDRF, y = file_paths, 
-                                      by = "Sample", all = TRUE)
-  grouped_df <- split(consolidated_df, consolidated_df$Condition)
-  test<<-grouped_df
-  
-  file_len <- nrow(read.delim(grouped_df$control$Path[1], header = TRUE))
-  expression_matrix <- data.frame()[1:file_len, ]
-  
-  for (condition in grouped_df) {
-    index <- 1
-    for (path in condition$Path) {
-      expression_matrix$placeholder <- 
-        as.numeric(unlist(read.delim(path, header = TRUE)[2]))
-      names(expression_matrix)[names(expression_matrix) == "placeholder"] <- 
-        grouped_df[[condition$Condition[1]]]$Sample[index]
-      index <- index+1
-    }
-  }
-  
-  rownames(expression_matrix) <- as.character(
-    c(read.delim(grouped_df$control$Path[1], header = TRUE))$ID_REF)
-  
-  return(list(expression_matrix, grouped_df))
-}
-
-build_design_matrix <- function(control, condition) {
-  return(cbind(1 , c(rep(0 , control) , rep(1 , condition))))
-}
-
 fit_data <- function(expression_matrix, design_matrix) {
   fit <- lmFit(expression_matrix , design_matrix)
   fit <- eBayes(fit)
-  tt <- topTable(fit, coef = 2, adjust.method = "BH", sort.by = "p", number = 700)
-}
-
-affy_to_entrez <- function(tt) {
-  affy_entrez_map <- AnnotationDbi::select(hgu133plus2.db, 
-                                           row.names(tt), 
-                                           c("ENTREZID")) %>%
-    na.omit()
+  tt <- topTable(fit, coef = 2, adjust.method = "BH", 
+                 sort.by = "p", number = 700)
   
-  tt <- rownames_to_column(tt, 'PROBEID')
-  tt <- as.data.frame(inner_join(affy_entrez_map, tt))
-  tt <- aggregate(list(logFC = tt$logFC, AveExpr = tt$AveExpr, t = tt$t, 
-                       P.Value = tt$ P.Value, 
-                       adj.P.Val = tt$adj.P.Val, 
-                       B = tt$B), 
-                  by=list(ENTREZID = tt$ENTREZID), FUN=mean) %>%
-    arrange(dplyr::desc(abs(t))) %>%
-    column_to_rownames('ENTREZID')
-  tt <- tt[ , !(names(tt) %in% c("PROBEID"))]
   return(tt)
-}
-
-greater_than_zero <- function(num) {
-  return(num > 0)
-}
-
-less_than_zero <- function(num) {
-  return(num < 0)
 }
 
 generate_DEG_table <- function(func, tt, filters, num_genes) {
   num_genes <- as.numeric(num_genes)
   if (is.na(num_genes)) stop("number of genes must be a number")
   if (num_genes > 150) stop("number of genes must be <= 150")
+  
   return(tt %>% 
            rownames_to_column('entrez_id') %>%
            dplyr::filter(func(logFC)) %>%
@@ -110,13 +32,17 @@ generate_DEG_table <- function(func, tt, filters, num_genes) {
            head(num_genes))
 }
 
-apply_user_filters <- function(tt, filters){
+apply_user_filters <- function(tt, filters) {
   for (filter in filters) {
     source("filter_functions.R")
     column <- filter[1]
     func <- get_func(filter[2])
     value <- as.numeric(filter[3])
+    
+    #error check
     if (is.na(value)) stop("filter value must be a number")
+    
+    # apply filter
     tt <- dplyr::filter(tt, func(tt[[column]], value))
   }
   return(tt)
@@ -140,4 +66,25 @@ write_gmt_files <- function(positive_DEG, negative_DEG) {
   to_write <- list()
   to_write$TAG_UP <- TAG_UP
   write_gmt(to_write, "uptag.gmt")
+}
+
+# Coordinate analysis
+do_analysis <- function(expression_matrix, design_matrix, user_filters,
+                        num_upgenes, num_downgenes) {
+  top_table <- fit_data(expression_matrix, design_matrix)
+  
+  source("affy_entrez_converter.R")
+  top_table <- affy_to_entrez(top_table)
+  
+  source("filter_functions.R")
+  positive_DEG <- generate_DEG_table(greater_than_zero, top_table, 
+                                     user_filters, num_upgenes)
+  negative_DEG <- generate_DEG_table(less_than_zero, top_table,
+                                     user_filters, num_downgenes)
+  
+  write_gmt_files(positive_DEG, negative_DEG)
+  
+  return (list(positive_DEG = positive_DEG, negative_DEG = negative_DEG,
+               positive_DEG_len = nrow(positive_DEG), 
+               negative_DEG_len = nrow(negative_DEG)))
 }

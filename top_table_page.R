@@ -31,6 +31,7 @@ render_top_table_page <- function(output, positive_DEG, negative_DEG,
   })
   
   manage_top_table_page(shinyjs::show)
+  return(output)
 }
 
 manage_top_table_page <- function (func) {

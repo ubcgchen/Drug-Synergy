@@ -10,7 +10,7 @@ ui <- fluidPage(theme = shinytheme("paper"),
                 useShinyalert(),
                 shinyjs::useShinyjs(),
                 sidebarPanel(
-                textInput("accession_code", "GEO Accession Code:", "E-GEOD-28750",
+                textInput("accession_code", "GEO Accession Code:", "E-GEOD-66099",
                           placeholder = "E-GEOD-XXXXX"),
                 actionButton("geo","Submit GEO Accession Code")
                 ),
@@ -40,7 +40,8 @@ ui <- fluidPage(theme = shinytheme("paper"),
                 DT::dataTableOutput("negative_DEG"),
                 uiOutput("confirm_DEG"),
                 uiOutput("level_selection_back_button"),
-                DT::dataTableOutput("top_drugs")
+                DT::dataTableOutput("top_drugs"),
+                uiOutput("top_table_back_button"),
                 )
 
 # Server
@@ -69,8 +70,10 @@ server <- function(input, output) {
     
     tryCatch({
       # download data from ArrayExpress, load the SDRF file, and render it
+      source("AE_downloader.R")
+      # AE_data <<- download_AE_data(input$accession_code)
+      
       source("SDRF_loader.R")
-      # download_AE_data(input$accession_code)
       SDRF <<- load_SDRF(AE_data, input$accession_code)
       source("raw_SDRF_page.R")
       output <- render_raw_SDRF_page(input, output)
@@ -201,33 +204,26 @@ server <- function(input, output) {
       filtered_SDRF <<- filter_sdrf(updated_SDRF, conditions, controls)
       
       # generate file paths for all data files
-      source("tt_generator.R")
+      source("file_path_loader.R")
       file_paths <<- get_file_paths(AE_data, filtered_SDRF)
       
-      res <- build_expression_matrix(file_paths, filtered_SDRF)
-      expression_matrix <- res[[1]]
-      grouped_df <- res[[2]]
+      # generate matrices
+      source("matrices_generator.R")
+      res <- build_matrices(file_paths)
+      expression_matrix <- res$expression_matrix
+      design_matrix <- res$design_matrix
       
-      design_matrix <- build_design_matrix(nrow(grouped_df$control),
-                                           nrow(grouped_df$condition))
+      # Do analysis
+      source("tt_generator.R")
+      res <- do_analysis(expression_matrix, design_matrix, user_filters,
+                         num_upgenes, num_downgenes)
       
-      # Do limma analysis + convert affy to entrez
-      top_table <- fit_data(expression_matrix, design_matrix)
-      top_table <- affy_to_entrez(top_table)
-      
-      positive_DEG <- generate_DEG_table(greater_than_zero, top_table, 
-                                         user_filters, num_upgenes)
-      negative_DEG <- generate_DEG_table(less_than_zero, top_table,
-                                         user_filters, num_downgenes)
-     
-      write_gmt_files(positive_DEG, negative_DEG)
-      
-      upreg_length <<- nrow(positive_DEG)
-      downreg_length <<- nrow(negative_DEG)
+      upreg_length <<- res$positive_DEG_len
+      downreg_length <<- res$negative_DEG_len
       
       source("top_table_page.R")
-      render_top_table_page(output, positive_DEG, negative_DEG, 
-                            upreg_length, downreg_length)
+      output <- render_top_table_page(output, res$positive_DEG, res$negative_DEG, 
+                            res$positive_DEG_len, res$negative_DEG_len)
       },
 
       error = function(cond) {
@@ -251,25 +247,31 @@ server <- function(input, output) {
   observeEvent(input$confirm_DEG, {
     
     tryCatch({
-      source("cmap_analyzer.R")
+      source("cmap_querier.R")
+      source("cmap_loader.R")
+      source("cmap_processor.R")
+      source("cmap_results_page.R")
       
-      # query and retrieve CMap data
       poll <- query_cmap(base::paste(input$accession_code, "_up", upreg_length,
                                      "_dn", downreg_length, sep = ""))
-      download_cmap_data(poll)
-      
-      # load and process CMap results
-      ds <- load_cmap_data(poll$job_id)
+      ds <- load_cmap_data(poll)
       top_drugs <<- process_cmap_data(ds)
-      
-      # render CMap results
-      source("cmap_results_page.R")
       output <- render_cmap_results_page(output)
     },
     error = function(cond) {
       shinyalert("Processing Error", cond$message, type = "error")
     })
+
+  })
+  
+  observeEvent(input$top_table_back_button, {
+    # hide cmap results page
+    source("cmap_results_page.R")
+    manage_cmap_results_page(shinyjs::hide)
     
+    # show top table page
+    source("top_table_page.R")
+    manage_top_table_page(shinyjs::show)
   })
 }
 

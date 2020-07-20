@@ -27,4 +27,11 @@ eq_to <- function(val, reference) {
   return (abs(val) == reference)
 }
 
+greater_than_zero <- function(num) {
+  return (num > 0)
+}
+
+less_than_zero <- function(num) {
+  return (num < 0)
+}
 

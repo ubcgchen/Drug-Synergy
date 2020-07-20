@@ -2,30 +2,6 @@ library(ArrayExpress)
 library(data.table)
 library(tidyverse)
 
-download_AE_data <- function(accession_code) {
-  
-  # make sure an accession code is provided
-  if(accession_code == "") {
-    stop("You must provide an Accession Code!")
-  }
-  
-  # create temporary directory to store data
-  AE_data <- tempdir()
-  if (!dir.exists(AE_data)) {
-    dir.create(AE_data)
-  }
-  
-  tryCatch(
-    # download data from ArrayExpress
-    getAE(accession_code, path = AE_data, type = "processed"),
-    warning = function(cond) {
-      stop("Please check your spelling and follow the suggested format")
-    }
-  )
-  
-  return(AE_data)
-}
-
 load_SDRF <- function(AE_data, accession_code) {
   
   # retrieve the SDRF file path and read it in
