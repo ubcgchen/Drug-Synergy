@@ -1,4 +1,5 @@
-affy_to_entrez <- function(tt) {
+affy_to_entrez <- function(tt, is_entrez) {
+  
   affy_entrez_map <- AnnotationDbi::select(hgu133plus2.db, 
                                            row.names(tt), 
                                            c("ENTREZID")) %>%
@@ -6,6 +7,7 @@ affy_to_entrez <- function(tt) {
   
   tt <- rownames_to_column(tt, 'PROBEID')
   tt <- as.data.frame(inner_join(affy_entrez_map, tt))
+  View(tt)
   tt <- aggregate(list(logFC = tt$logFC, AveExpr = tt$AveExpr, t = tt$t, 
                        P.Value = tt$ P.Value, 
                        adj.P.Val = tt$adj.P.Val, 
