@@ -74,7 +74,7 @@ do_analysis <- function(expression_matrix, design_matrix, user_filters,
   top_table <- fit_data(expression_matrix, design_matrix)
   
   source("affy_entrez_converter.R")
-  top_table <- affy_to_entrez(top_table)
+  top_table <- affy_to_entrez(top_table, TRUE)
   
   source("filter_functions.R")
   positive_DEG <- generate_DEG_table(greater_than_zero, top_table, 

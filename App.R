@@ -10,7 +10,7 @@ ui <- fluidPage(theme = shinytheme("paper"),
                 useShinyalert(),
                 shinyjs::useShinyjs(),
                 sidebarPanel(
-                textInput("accession_code", "GEO Accession Code:", "E-GEOD-66099",
+                textInput("accession_code", "GEO Accession Code:", "E-GEOD-28750",
                           placeholder = "E-GEOD-XXXXX"),
                 actionButton("geo","Submit GEO Accession Code")
                 ),
@@ -71,7 +71,7 @@ server <- function(input, output) {
     tryCatch({
       # download data from ArrayExpress, load the SDRF file, and render it
       source("AE_downloader.R")
-      # AE_data <<- download_AE_data(input$accession_code)
+      AE_data <<- download_AE_data(input$accession_code)
       
       source("SDRF_loader.R")
       SDRF <<- load_SDRF(AE_data, input$accession_code)
@@ -220,6 +220,8 @@ server <- function(input, output) {
       
       upreg_length <<- res$positive_DEG_len
       downreg_length <<- res$negative_DEG_len
+      positive_DEG <<- res$positive_DEG
+      negative_DEG <<- res$negative_DEG
       
       source("top_table_page.R")
       output <- render_top_table_page(output, res$positive_DEG, res$negative_DEG, 
