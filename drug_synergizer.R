@@ -6,7 +6,6 @@ get_sig <- function(drug_name) {
                         "\"}}&user_key=",
                         config::get("api_key"),
                         sep = "")
-  
   # Get the signature
   res <- httr::GET(pert_url) %>%
     httr::content(as = 'text') %>%
@@ -27,10 +26,6 @@ get_ref_drug_sig <- function(reference_drug) {
       
       if(is_empty(reference_drug_signature)) next
       
-      # TODO: change to using a consensus signature (defaults to just the first signature right now)
-      ref_up <- reference_drug_signature$up100_full[[1]]
-      ref_down <- reference_drug_signature$dn100_full[[1]]
-      
       break
     }
   } else {
@@ -39,6 +34,7 @@ get_ref_drug_sig <- function(reference_drug) {
                                                  please try a different drug")
   }
   
+  # TODO: change to using a consensus signature (defaults to just the first signature right now)
   ref_up <- reference_drug_signature$up100_full[[1]]
   ref_down <- reference_drug_signature$dn100_full[[1]]
   
@@ -50,7 +46,7 @@ calculate_concordance_ratio <- function(drug_up, drug_dn, ref_up, ref_dn) {
   num_same_dir_as_ref_up <- length(Reduce(intersect, 
                                           list(drug_up, ref_up)))
   num_same_dir_as_ref_dn <- length(Reduce(intersect, 
-                                          list(drug_dn,ref_down)))
+                                          list(drug_dn,ref_dn)))
   num_same_dir_as_ref <- num_same_dir_as_ref_up + num_same_dir_as_ref_dn
   
   num_diff_dir_as_ref_up_dn <- length(Reduce(intersect, 
@@ -131,7 +127,7 @@ remove_na <- function(scores) {
 get_synergistic_drug <- function(top_drugs, reference_drugs, ref_up, ref_down,
                                  positive_DEG, negative_DEG) {
   scores <- data.frame(Drug=rep(NA, nrow(top_drugs)), concordance=rep(NA, 1),
-                       discordance=rep(NA, 2),
+                       discordance=rep(NA, 1),
                        stringsAsFactors=FALSE)
   index <- 1
   for (drug in top_drugs$pert_iname) {
@@ -164,7 +160,7 @@ get_synergistic_drug <- function(top_drugs, reference_drugs, ref_up, ref_down,
     
     index = index + 1
     
-    if (index == 50) break
+    if (index == 10) break
 }
   
   # process scores and compute orthogonality scores
@@ -177,10 +173,17 @@ get_synergistic_drug <- function(top_drugs, reference_drugs, ref_up, ref_down,
   return(scores[1,]$Drug)
 }
 
-synergize_drugs <- function(top_drugs, drug_name = NULL, positive_DEG, 
+synergize_drugs <- function(top_drugs, drug_name, positive_DEG, 
                             negative_DEG, combination_size) {
-
+  
+  if (drug_name == "") drug_name <- NULL
+  print(drug_name)
+  
   drugs = c(drug_name)
+  ref_up = c()
+  ref_down = c()
+  
+  
   
   for (curr_drug_index in 1:combination_size) {
     ref_drug_sig <- get_ref_drug_sig(drugs[curr_drug_index])
@@ -194,9 +197,9 @@ synergize_drugs <- function(top_drugs, drug_name = NULL, positive_DEG,
                                              ref_up, ref_down, 
                                              positive_DEG, negative_DEG)
     drugs = c(drugs, synergistic_drug)
-    index = index + 1
+    # index = index + 1
   }
   
-  print(drugs)
+  return(drugs)
 }
        

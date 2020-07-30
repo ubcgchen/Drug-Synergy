@@ -3,6 +3,7 @@ library(shinythemes)
 library(DT)
 library(shinyalert)
 library(shinybusy)
+library(shinyBS)
 
 # UI
 ui <- fluidPage(theme = shinytheme("paper"),
@@ -41,11 +42,20 @@ ui <- fluidPage(theme = shinytheme("paper"),
                 uiOutput("confirm_DEG"),
                 uiOutput("level_selection_back_button"),
                 DT::dataTableOutput("top_drugs"),
+                uiOutput("synergy_number"),
+                uiOutput("reference_drug"),
+                uiOutput("find_synergy"),
                 uiOutput("top_table_back_button"),
+                uiOutput("synergized_drug_tag"),
+                uiOutput("synergized_drug_panel"),
+                uiOutput("cmap_results_back_button"),
                 )
 
 # Server
 server <- function(input, output) {
+  
+  source("cmap_results_page.R")
+  output <- render_cmap_results_page(output)
   
   observeEvent(input$reset, {
     # hide all UI elements
@@ -61,6 +71,9 @@ server <- function(input, output) {
     source("cmap_results_page.R")
     manage_cmap_results_page(shinyjs::hide)
     
+    source("synergized_drugs_page.R")
+    manage_synthesized_drugs_page(shinyjs::hide)
+    
     # re-enable button to submit dataset
     shinyjs::enable("geo")
   })
@@ -71,7 +84,7 @@ server <- function(input, output) {
     tryCatch({
       # download data from ArrayExpress, load the SDRF file, and render it
       source("AE_downloader.R")
-      AE_data <<- download_AE_data(input$accession_code)
+      # AE_data <<- download_AE_data(input$accession_code)
       
       source("SDRF_loader.R")
       SDRF <<- load_SDRF(AE_data, input$accession_code)
@@ -254,10 +267,10 @@ server <- function(input, output) {
       source("cmap_processor.R")
       source("cmap_results_page.R")
       
-      poll <- query_cmap(base::paste(input$accession_code, "_up", upreg_length,
-                                     "_dn", downreg_length, sep = ""))
-      ds <- load_cmap_data(poll)
-      top_drugs <<- process_cmap_data(ds)
+      # poll <- query_cmap(base::paste(input$accession_code, "_up", upreg_length,
+      #                               "_dn", downreg_length, sep = ""))
+      # ds <- load_cmap_data(poll)
+      # top_drugs <<- process_cmap_data(ds)
       output <- render_cmap_results_page(output)
     },
     error = function(cond) {
@@ -274,6 +287,25 @@ server <- function(input, output) {
     # show top table page
     source("top_table_page.R")
     manage_top_table_page(shinyjs::show)
+  })
+  
+  observeEvent(input$find_synergy, {
+    source("drug_synergizer.R")
+    drugs <- synergize_drugs(top_drugs, input$reference_drug, positive_DEG,
+                             negative_DEG, input$synergy_number)
+    
+    source("synergized_drugs_page.R")
+    output <- render_synergized_drugs_page(output, drugs)
+  })
+  
+  observeEvent(input$cmap_results_back_button, {
+    # hide drug synergy page
+    source("synergized_drugs_page.R")
+    manage_synthesized_drugs_page(shinyjs::hide)
+    
+    # show top table page
+    source("cmap_results_page.R")
+    manage_cmap_results_page(shinyjs::show)
   })
 }
 

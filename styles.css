@@ -60,3 +60,15 @@
     margin-left: 170px;
 }
 
+#find_synergy {
+    margin-bottom: 10px;
+}
+
+#synergized_drug_panel {
+    margin-top: 20px;
+}
+
+#synergized_drug_tag {
+    text-align: left;
+    margin-top: 65px;
+}
