@@ -212,24 +212,9 @@ server <- function(input, output) {
             input[[base::paste(filter, "value", sep = "")]])
       }
       
-      # filter SDRF based on user-specified condition/control levels
-      source("SDRF_loader.R")
-      filtered_SDRF <- filter_sdrf(updated_SDRF, conditions, controls)
-      
-      # generate file paths for all data files
-      source("file_path_loader.R")
-      file_paths <- get_file_paths(AE_data, filtered_SDRF)
-      
-      # generate matrices
-      source("matrices_generator.R")
-      res <- build_matrices(file_paths)
-      expression_matrix <- res$expression_matrix
-      design_matrix <- res$design_matrix
-      
-      # Do analysis
-      source("tt_generator.R")
-      res <- do_analysis(expression_matrix, design_matrix, user_filters,
-                         num_upgenes, num_downgenes)
+      source("limma_analysis_coordinator.R")
+      res <- coordinate_analysis(user_filters, num_upgenes, 
+                                 num_downgenes, conditions, controls)
       
       upreg_length <<- res$positive_DEG_len
       downreg_length <<- res$negative_DEG_len

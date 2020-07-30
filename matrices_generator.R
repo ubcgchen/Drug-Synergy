@@ -1,5 +1,3 @@
-library("mustashe")
-
 build_expression_matrix <- function(file_paths) {
   # split dataframe into a list of condition and a list of control
   grouped_df <- split(file_paths, file_paths$Condition)
