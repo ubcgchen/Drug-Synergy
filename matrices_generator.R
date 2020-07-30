@@ -1,15 +1,13 @@
-
+library("mustashe")
 
 build_expression_matrix <- function(file_paths) {
-  
   # split dataframe into a list of condition and a list of control
   grouped_df <- split(file_paths, file_paths$Condition)
-  test<<-grouped_df
-  
+
   # ASSUMPTION: all files will have the same number of rows
   first_file <- read.delim(grouped_df$control$Path[1], header = TRUE)
   file_len <- nrow(first_file)
-
+  
   # Make an empty dataframe to hold the expression data
   expression_matrix <- data.frame()[1:file_len, ]
   
@@ -25,25 +23,29 @@ build_expression_matrix <- function(file_paths) {
       # rename placeholder column to sample name
       names(expression_matrix)[names(expression_matrix) == "placeholder"] <-
         cur_df$Sample[index]
-  
+      
       index <- index+1
     }
   }
   
   # ASSUMPTION: all files will have probe IDs in the same order
   rownames(expression_matrix) <- as.character(c(first_file$ID_REF))
-
-  return(list(expression_matrix = expression_matrix, 
-              control_len = nrow(grouped_df$control),
-              condition_len = nrow(grouped_df$condition)))
+  
+  return_val <- list(expression_matrix = expression_matrix, 
+                     control_len = nrow(grouped_df$control),
+                     condition_len = nrow(grouped_df$condition))
+  
+  return(return_val)
 }
+
+memoised_expression_mtrx <- memoise(build_expression_matrix)
 
 build_design_matrix <- function(control, condition) {
   return(cbind(1 , c(rep(0 , control) , rep(1 , condition))))
 }
 
 build_matrices <- function(file_paths) {
-  res <- build_expression_matrix(file_paths)
+  res <- memoised_expression_mtrx(file_paths)
   design_matrix <- build_design_matrix(res$control_len, res$condition_len)
   
   return(list(expression_matrix = res$expression_matrix,

@@ -1,240 +1,34 @@
 build_bs_collapse <- function(length, drugs) {
   
+  # Get information on each drug
   descriptions <<- get_descriptions(drugs)
-
-  if (length == 2) {
-    
-    for(description in descriptions) {
+  
+  # Download the structure for each drug
+  for(description in descriptions) {
       download.file(description$structure_link,
-                    destfile = base::paste("www/", description$name, 
+                    destfile = base::paste("www/", description$name,
                                            ".png", sep = ""))
     }
-    
-    ui_element <- 
-      bsCollapse(id = "collapseExample", open = NULL, multiple = FALSE,
-                 bsCollapsePanel(drugs[1],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[1]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[1]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[1], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[2],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[2]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[2]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[2], ".png", 
-                                                       sep = "")),
-                                 style = "default"))
-    
-  } 
-  else if(length == 3) {
-    
-    for(description in descriptions) {
-      download.file(description$structure_link,
-                    destfile = base::paste("www/", description$name, 
-                                           ".png", sep = ""))
-    }
-    
-    ui_element <- 
-      bsCollapse(id = "collapseExample", open = NULL, multiple = FALSE,
-                 bsCollapsePanel(drugs[1],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[1]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[1]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[1], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[2],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[2]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[2]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[2], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[3],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[3]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[3]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[3], ".png", 
-                                                       sep = "")),
-                                 style = "default"))
-  } 
-  else if(length == 4) {
-    for(description in descriptions) {
-      download.file(description$structure_link,
-                    destfile = base::paste("www/", description$name, 
-                                           ".png", sep = ""))
-    }
-    
-    ui_element <- 
-      bsCollapse(id = "collapseExample", open = NULL, multiple = FALSE,
-                 bsCollapsePanel(drugs[1],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[1]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[1]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[1], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[2],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[2]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[2]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[2], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[3],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[3]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[3]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[3], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[4],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[4]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[4]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[4], ".png", 
-                                                       sep = "")),
-                                 style = "default"))
-  } 
-  else if(length == 5) {
-    for(description in descriptions) {
-      download.file(description$structure_link,
-                    destfile = base::paste("www/", description$name, 
-                                           ".png", sep = ""))
-    }
-    
-    ui_element <- 
-      bsCollapse(id = "collapseExample", open = NULL, multiple = FALSE,
-                 bsCollapsePanel(drugs[1],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[1]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[1]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[1], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[2],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[2]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[2]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[2], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[3],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[3]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[3]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[3], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[4],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[4]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[4]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[4], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[5],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[5]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[5]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[5], ".png", 
-                                                       sep = "")),
-                                 style = "default"))
-  } 
-  else if(length == 6) {
-    for(description in descriptions) {
-      download.file(description$structure_link,
-                    destfile = base::paste("www/", description$name, 
-                                           ".png", sep = ""))
-    }
-    
-    ui_element <- 
-      bsCollapse(id = "collapseExample", open = NULL, multiple = FALSE,
-                 bsCollapsePanel(drugs[1],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[1]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[1]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[1], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[2],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[2]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[2]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[2], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[3],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[3]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[3]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[3], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[4],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[4]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[4]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[4], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[5],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[5]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[5]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[5], ".png", 
-                                                       sep = "")),
-                                 style = "default"),
-                 bsCollapsePanel(drugs[6],
-                                 HTML("<b>drug description:</b>"),
-                                 HTML(base::paste(descriptions[[6]]$description, "<br>")),
-                                 HTML("<b>pubchem id:</b>"),
-                                 HTML(descriptions[[6]]$pubchem_id, "<br>"),
-                                 HTML("<b>structure:</b><br><br>"),
-                                 img(src = base::paste(drugs[6], ".png", 
-                                                       sep = "")),
-                                 style = "default"))
+  
+  # Build the expression to generate drop-down panel
+  code <- "bsCollapse(id = \"drug_panel\", open = NULL, multiple = FALSE,"
+  for (i in 1:length) {
+    code <- c(code, base::paste(
+      "bsCollapsePanel(drugs[",i,"],",
+                      "HTML(\"<b>drug description:</b>\"),",
+                      "HTML(base::paste(descriptions[[",i,"]]$description, \"<br>\")),",
+                      "HTML(\"<b>pubchem id:</b>\"),",
+                      "HTML(descriptions[[1]]$pubchem_id, \"<br>\"),",
+                      "HTML(\"<b>structure:</b><br><br>\"),",
+                      "img(src = base::paste(drugs[",i,"], \".png\",sep = \"\")),",
+                      "style = \"default\"),", sep = ""))
   }
+
+  # Formate and evaluate the expression
+  code <- base::paste(code, collapse = " ")
+  code <- sub(",([^,]*)$", ")\\1", code)
+  ui_element <- eval(parse(text=code))
+
   return(ui_element)
 }
 
@@ -254,6 +48,7 @@ get_descriptions <- function(drugs) {
       httr::content(as = 'text') %>%
       jsonlite::fromJSON()
     
+    # Get the drug description, pubchem id, structure, and name
     description = list(description = res$description, 
                        pubchem_id = res$pubchem_cid, 
                        structure_link = res$structure_url,

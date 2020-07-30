@@ -54,8 +54,8 @@ ui <- fluidPage(theme = shinytheme("paper"),
 # Server
 server <- function(input, output) {
   
-  source("cmap_results_page.R")
-  output <- render_cmap_results_page(output)
+  # source("synergized_drugs_page.R")
+  # output <- render_cmap_results_page(output)
   
   observeEvent(input$reset, {
     # hide all UI elements
@@ -214,11 +214,11 @@ server <- function(input, output) {
       
       # filter SDRF based on user-specified condition/control levels
       source("SDRF_loader.R")
-      filtered_SDRF <<- filter_sdrf(updated_SDRF, conditions, controls)
+      filtered_SDRF <- filter_sdrf(updated_SDRF, conditions, controls)
       
       # generate file paths for all data files
       source("file_path_loader.R")
-      file_paths <<- get_file_paths(AE_data, filtered_SDRF)
+      file_paths <- get_file_paths(AE_data, filtered_SDRF)
       
       # generate matrices
       source("matrices_generator.R")
