@@ -1,7 +1,7 @@
 coordinate_analysis <- function(user_filters, num_upgenes, num_downgenes,
                                 conditions, controls) {
   
-  source("analysis_cache.R")
+  source("caches/analysis_cache.R")
   res <- check_cache(user_filters, num_upgenes, num_downgenes,
                     conditions, controls)
   
@@ -25,7 +25,7 @@ coordinate_analysis <- function(user_filters, num_upgenes, num_downgenes,
     res <- do_analysis(expression_matrix, design_matrix, user_filters,
                        num_upgenes, num_downgenes)
     
-    source("analysis_cache.R")
+    source("caches/analysis_cache.R")
     add_to_cache(user_filters, num_upgenes, 
               num_downgenes, conditions, controls, res)
   }

@@ -1,15 +1,22 @@
 get_sig <- function(drug_name) {
-  # URL to query for a drug signature
-  pert_url <- base::paste("https://api.clue.io/api/sigs?filter={\"where\":",
-                        "{\"pert_iname\":\"",
-                        drug_name,
-                        "\"}}&user_key=",
-                        config::get("api_key"),
-                        sep = "")
-  # Get the signature
-  res <- httr::GET(pert_url) %>%
-    httr::content(as = 'text') %>%
-    jsonlite::fromJSON()
+  
+  res <- check_synergize_cache(drug_name)
+  
+  if (is.null(res)){
+    # URL to query for a drug signature
+    pert_url <- base::paste("https://api.clue.io/api/sigs?filter={\"where\":",
+                            "{\"pert_iname\":\"",
+                            drug_name,
+                            "\"}}&user_key=",
+                            config::get("api_key"),
+                            sep = "")
+    # Get the signature
+    res <- httr::GET(pert_url) %>%
+      httr::content(as = 'text') %>%
+      jsonlite::fromJSON()
+    
+    add_to_synergize_cache(drug_name, res)
+  }
   
   return(res)
 }
@@ -183,7 +190,7 @@ synergize_drugs <- function(top_drugs, drug_name, positive_DEG,
   ref_up = c()
   ref_down = c()
   
-  
+  source("caches/synergize_cache.R")
   
   for (curr_drug_index in 1:combination_size) {
     ref_drug_sig <- get_ref_drug_sig(drugs[curr_drug_index])
@@ -197,7 +204,6 @@ synergize_drugs <- function(top_drugs, drug_name, positive_DEG,
                                              ref_up, ref_down, 
                                              positive_DEG, negative_DEG)
     drugs = c(drugs, synergistic_drug)
-    # index = index + 1
   }
   
   return(drugs)

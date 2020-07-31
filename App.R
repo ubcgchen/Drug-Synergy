@@ -54,9 +54,16 @@ ui <- fluidPage(theme = shinytheme("paper"),
 # Server
 server <- function(input, output) {
   
-  # source("synergized_drugs_page.R")
+  # TESTING PURPOSES ONLY: Start at the cmap page
+  # source("cmap_results_page")
   # output <- render_cmap_results_page(output)
   
+  # Used to get user filters for generating top tables
+  filters <- reactiveValues(
+    input_filters = list()
+  )
+  
+  # Triggered when the 'reset' button is pushed
   observeEvent(input$reset, {
   
     # hide all UI elements
@@ -74,6 +81,16 @@ server <- function(input, output) {
     
     source("pages/synergized_drugs_page.R")
     manage_synthesized_drugs_page(shinyjs::hide)
+    
+    # clear caches
+    source("caches/analysis_cache.R")
+    clear_analysis_cache()
+    
+    source("caches/synergize_cache.R")
+    clear_synergize_cache()
+    
+    source("caches/cmap_cache.R")
+    clear_cmap_cache()
     
     # re-enable button to submit dataset
     shinyjs::enable("geo")
@@ -98,10 +115,6 @@ server <- function(input, output) {
       })
     
     })
-  
-  filters <- reactiveValues(
-    input_filters = list()
-  )
   
   # Triggered when user clicks button to add a filter
   observeEvent(input$add_filter, {
@@ -175,6 +188,7 @@ server <- function(input, output) {
     manage_raw_SDRF_page(shinyjs::show)
   })
   
+  # Triggered when user selects desired number of down-regulated genes
   observeEvent (input$num_downgenes_select, {
     source("gene_number_choices.R")
     output <- render_gene_number_choices(input$num_downgenes_select, 
@@ -182,6 +196,7 @@ server <- function(input, output) {
                                          output)
   })
   
+  # Triggered when user selects desired number of up-regulated genes
   observeEvent (input$num_upgenes_select, {
     source("gene_number_choices.R")
     output <- render_gene_number_choices(input$num_upgenes_select, 
@@ -217,8 +232,8 @@ server <- function(input, output) {
       res <- coordinate_analysis(user_filters, num_upgenes, 
                                  num_downgenes, conditions, controls)
       
-      upreg_length <<- res$positive_DEG_len
-      downreg_length <<- res$negative_DEG_len
+      upreg_length <- res$positive_DEG_len
+      downreg_length <- res$negative_DEG_len
       positive_DEG <<- res$positive_DEG
       negative_DEG <<- res$negative_DEG
       
@@ -248,15 +263,11 @@ server <- function(input, output) {
   observeEvent(input$confirm_DEG, {
     
     tryCatch({
-      source("cmap_querier.R")
-      source("cmap_loader.R")
-      source("cmap_processor.R")
+      source("cmap/cmap_coordinator.R")
       source("pages/cmap_results_page.R")
       
-      # poll <- query_cmap(base::paste(input$accession_code, "_up", upreg_length,
-      #                               "_dn", downreg_length, sep = ""))
-      # ds <- load_cmap_data(poll)
-      # top_drugs <<- process_cmap_data(ds)
+      coordinate_cmap(input$accession_code, positive_DEG, negative_DEG)
+      
       output <- render_cmap_results_page(output)
     },
     error = function(cond) {
@@ -265,6 +276,8 @@ server <- function(input, output) {
 
   })
   
+  # Triggered when user wants to go from the cmap results page back to the top
+  # table page
   observeEvent(input$top_table_back_button, {
     # hide cmap results page
     source("pages/cmap_results_page.R")

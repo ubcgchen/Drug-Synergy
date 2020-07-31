@@ -9,3 +9,4 @@ dntag.gmt
 *.tar.gz
 */
 !pages/
+!caches/
