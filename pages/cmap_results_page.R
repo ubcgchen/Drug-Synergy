@@ -1,6 +1,6 @@
 render_cmap_results_page <- function(output) {
   
-  source("top_table_page.R")
+  source("pages/top_table_page.R")
   manage_top_table_page(shinyjs::hide)
   
   output$top_drugs <- DT::renderDataTable({

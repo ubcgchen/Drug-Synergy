@@ -1,6 +1,6 @@
 render_synergized_drugs_page <- function(output, drugs) {
   
-  source("cmap_results_page.R")
+  source("pages/cmap_results_page.R")
   manage_cmap_results_page(shinyjs::hide)
   
   output$synergized_drug_tag <- renderUI({

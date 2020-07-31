@@ -58,20 +58,21 @@ server <- function(input, output) {
   # output <- render_cmap_results_page(output)
   
   observeEvent(input$reset, {
+  
     # hide all UI elements
-    source("raw_SDRF_page.R")
+    source("pages/raw_SDRF_page.R")
     manage_raw_SDRF_page(shinyjs::hide)
     
-    source("level_selection_page.R")
+    source("pages/level_selection_page.R")
     manage_level_selection_page(shinyjs::hide)
     
-    source("top_table_page.R")
+    source("pages/top_table_page.R")
     manage_top_table_page(shinyjs::hide)
     
-    source("cmap_results_page.R")
+    source("pages/cmap_results_page.R")
     manage_cmap_results_page(shinyjs::hide)
     
-    source("synergized_drugs_page.R")
+    source("pages/synergized_drugs_page.R")
     manage_synthesized_drugs_page(shinyjs::hide)
     
     # re-enable button to submit dataset
@@ -88,7 +89,7 @@ server <- function(input, output) {
       
       source("SDRF_loader.R")
       SDRF <<- load_SDRF(AE_data, input$accession_code)
-      source("raw_SDRF_page.R")
+      source("pages/raw_SDRF_page.R")
       output <- render_raw_SDRF_page(input, output)
     },
     
@@ -139,7 +140,7 @@ server <- function(input, output) {
   
   # Triggered when the user submits manually inputted SDRF details
   observeEvent(input$sdrf, {
-    
+
     # load input variables
     sample_col_name <- input$select_sample
     condition_col_name <- input$select_condition
@@ -152,7 +153,7 @@ server <- function(input, output) {
       updated_SDRF <<- update_sdrf(SDRF, c(sample_col_name, condition_col_name),
                                    prefix, suffix)
 
-      source("level_selection_page.R")
+      source("pages/level_selection_page.R")
       output <- render_level_selection_page(output)
     },
     
@@ -166,11 +167,11 @@ server <- function(input, output) {
   # raw SDRF page
   observeEvent(input$raw_sdrf_back_button, {
     # hide level selection page
-    source("level_selection_page.R")
+    source("pages/level_selection_page.R")
     manage_level_selection_page(shinyjs::hide)
     
     # show raw sdrf page
-    source("raw_SDRF_page.R")
+    source("pages/raw_SDRF_page.R")
     manage_raw_SDRF_page(shinyjs::show)
   })
   
@@ -221,7 +222,7 @@ server <- function(input, output) {
       positive_DEG <<- res$positive_DEG
       negative_DEG <<- res$negative_DEG
       
-      source("top_table_page.R")
+      source("pages/top_table_page.R")
       output <- render_top_table_page(output, res$positive_DEG, res$negative_DEG, 
                             res$positive_DEG_len, res$negative_DEG_len)
       },
@@ -235,11 +236,11 @@ server <- function(input, output) {
   # selection page
   observeEvent(input$level_selection_back_button, {
     # hide top table page
-    source("top_table_page.R")
+    source("pages/top_table_page.R")
     manage_top_table_page(shinyjs::hide)
     
     # show level selection page
-    source("level_selection_page.R")
+    source("pages/level_selection_page.R")
     manage_level_selection_page(shinyjs::show)
   })
   
@@ -250,7 +251,7 @@ server <- function(input, output) {
       source("cmap_querier.R")
       source("cmap_loader.R")
       source("cmap_processor.R")
-      source("cmap_results_page.R")
+      source("pages/cmap_results_page.R")
       
       # poll <- query_cmap(base::paste(input$accession_code, "_up", upreg_length,
       #                               "_dn", downreg_length, sep = ""))
@@ -266,11 +267,11 @@ server <- function(input, output) {
   
   observeEvent(input$top_table_back_button, {
     # hide cmap results page
-    source("cmap_results_page.R")
+    source("pages/cmap_results_page.R")
     manage_cmap_results_page(shinyjs::hide)
     
     # show top table page
-    source("top_table_page.R")
+    source("pages/top_table_page.R")
     manage_top_table_page(shinyjs::show)
   })
   
@@ -279,17 +280,17 @@ server <- function(input, output) {
     drugs <- synergize_drugs(top_drugs, input$reference_drug, positive_DEG,
                              negative_DEG, input$synergy_number)
     
-    source("synergized_drugs_page.R")
+    source("pages/synergized_drugs_page.R")
     output <- render_synergized_drugs_page(output, drugs)
   })
   
   observeEvent(input$cmap_results_back_button, {
     # hide drug synergy page
-    source("synergized_drugs_page.R")
+    source("pages/synergized_drugs_page.R")
     manage_synthesized_drugs_page(shinyjs::hide)
     
     # show top table page
-    source("cmap_results_page.R")
+    source("pages/cmap_results_page.R")
     manage_cmap_results_page(shinyjs::show)
   })
 }

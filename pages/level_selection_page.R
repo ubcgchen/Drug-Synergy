@@ -1,6 +1,6 @@
 render_level_selection_page <- function(output) {
   
-  source("raw_SDRF_page.R")
+  source("pages/raw_SDRF_page.R")
   manage_raw_SDRF_page(shinyjs::hide)
   
   output$select_condition_level <- renderUI({

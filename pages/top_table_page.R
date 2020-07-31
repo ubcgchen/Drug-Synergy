@@ -1,7 +1,7 @@
 render_top_table_page <- function(output, positive_DEG, negative_DEG, 
                                   num_upgenes, num_downgenes) {
   
-  source("level_selection_page.R")
+  source("pages/level_selection_page.R")
   manage_level_selection_page(shinyjs::hide)
 
   output$positive_DEG_Tag <- renderUI({

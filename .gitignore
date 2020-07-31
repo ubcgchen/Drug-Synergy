@@ -8,3 +8,4 @@ uptag.gmt
 dntag.gmt
 *.tar.gz
 */
+!pages/
