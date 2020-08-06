@@ -101,10 +101,10 @@ server <- function(input, output) {
     
     tryCatch({
       # download data from ArrayExpress, load the SDRF file, and render it
-      source("AE_downloader.R")
-      # AE_data <<- download_AE_data(input$accession_code)
+      source("controller/AE_downloader.R")
+      #AE_data <<- download_AE_data(input$accession_code)
       
-      source("SDRF_loader.R")
+      source("controller/gene_analyzer/SDRF_loader.R")
       SDRF <<- load_SDRF(AE_data, input$accession_code)
       source("pages/raw_SDRF_page.R")
       output <- render_raw_SDRF_page(input, output)
@@ -129,7 +129,7 @@ server <- function(input, output) {
     filters
     
     # render all filters
-    source("filters.R")
+    source("controller/filters.R")
     output <- render_filters(input, output, filters)
     
   })
@@ -146,7 +146,7 @@ server <- function(input, output) {
     filters
     
     # render all filters
-    source("filters.R")
+    source("controller/filters.R")
     output <- render_filters(output, filters)
     
   })
@@ -162,7 +162,7 @@ server <- function(input, output) {
     
     tryCatch({
       # Update SDRF based on user-provided SDRF details and render the next page
-      source("SDRF_loader.R")
+      source("controller/gene_analyzer/SDRF_loader.R")
       updated_SDRF <<- update_sdrf(SDRF, c(sample_col_name, condition_col_name),
                                    prefix, suffix)
 
@@ -190,7 +190,7 @@ server <- function(input, output) {
   
   # Triggered when user selects desired number of down-regulated genes
   observeEvent (input$num_downgenes_select, {
-    source("gene_number_choices.R")
+    source("controller/gene_number_choices.R")
     output <- render_gene_number_choices(input$num_downgenes_select, 
                                          "num_downgenes_custom",
                                          output)
@@ -198,7 +198,7 @@ server <- function(input, output) {
   
   # Triggered when user selects desired number of up-regulated genes
   observeEvent (input$num_upgenes_select, {
-    source("gene_number_choices.R")
+    source("controller/gene_number_choices.R")
     output <- render_gene_number_choices(input$num_upgenes_select, 
                                          "num_upgenes_custom", 
                                          output)
@@ -228,7 +228,7 @@ server <- function(input, output) {
             input[[base::paste(filter, "value", sep = "")]])
       }
       
-      source("limma_analysis_coordinator.R")
+      source("controller/gene_analyzer/limma_analysis_coordinator.R")
       res <- coordinate_analysis(user_filters, num_upgenes, 
                                  num_downgenes, conditions, controls)
       
@@ -263,7 +263,7 @@ server <- function(input, output) {
   observeEvent(input$confirm_DEG, {
     
     tryCatch({
-      source("cmap/cmap_coordinator.R")
+      source("controller/cmap/cmap_coordinator.R")
       source("pages/cmap_results_page.R")
       
       coordinate_cmap(input$accession_code, positive_DEG, negative_DEG)
@@ -289,7 +289,7 @@ server <- function(input, output) {
   })
   
   observeEvent(input$find_synergy, {
-    source("drug_synergizer.R")
+    source("controller/drug_synergizer.R")
     drugs <- synergize_drugs(top_drugs, input$reference_drug, positive_DEG,
                              negative_DEG, input$synergy_number, 
                              input$interaction_threshold)

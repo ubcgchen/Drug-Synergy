@@ -15,7 +15,7 @@ render_synergized_drugs_page <- function(output, drugs) {
   })
   
   output$synergized_drug_panel <- renderUI({
-    source("synergized_drugs_page_helpers.R")
+    source("controller/synergized_drugs_page_helpers.R")
     build_bs_collapse(length(drugs), drugs)
   })
   

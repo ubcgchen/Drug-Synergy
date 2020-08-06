@@ -10,3 +10,10 @@ dntag.gmt
 */
 !pages/
 !caches/
+!controller/
+!controller/gene_analyzer
+!controller/cmap
+!controller/level_selector_page_helpers
+!tools
+!www
+!drug\ interaction\ tables
