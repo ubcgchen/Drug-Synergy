@@ -7,10 +7,10 @@ render_synergized_drugs_page <- function(output, drugs) {
     length <- length(drugs)-1
     if (length == 1) {
       h4(base::paste("Top", length, "synergized drug with reference to", 
-                     drugs[1]))
+                     drugs[[1]]$drug))
     } else {
       h4(base::paste("Top", length, "synergized drugs with reference to", 
-                     drugs[1]))
+                     drugs[[1]]$drug))
     }
   })
   

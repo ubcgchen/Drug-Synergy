@@ -1,3 +1,5 @@
+library(rlist)
+
 if (!exists("cmap_cache")) {
   cmap_cache = list()
 }

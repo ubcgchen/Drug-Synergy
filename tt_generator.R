@@ -8,7 +8,6 @@ library(limma)
 library(conflicted)
 library(AnnotationDbi)
 library(hgu133plus2.db)
-library(cmapR)
 
 fit_data <- function(expression_matrix, design_matrix) {
   fit <- lmFit(expression_matrix , design_matrix)

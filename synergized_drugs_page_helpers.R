@@ -1,27 +1,59 @@
 build_bs_collapse <- function(length, drugs) {
-  
+
   # Get information on each drug
   descriptions <<- get_descriptions(drugs)
   
   # Download the structure for each drug
   for(description in descriptions) {
+    destfile_name <- base::paste("www/", description$name[1],
+                                 ".png", sep = "")
+    print(file.exists(destfile_name))
+    if (!file.exists(destfile_name)) {
       download.file(description$structure_link,
-                    destfile = base::paste("www/", description$name,
-                                           ".png", sep = ""))
+                    destfile = destfile_name)
+    }
     }
   
   # Build the expression to generate drop-down panel
   code <- "bsCollapse(id = \"drug_panel\", open = NULL, multiple = FALSE,"
   for (i in 1:length) {
-    code <- c(code, base::paste(
-      "bsCollapsePanel(drugs[",i,"],",
-                      "HTML(\"<b>drug description:</b>\"),",
-                      "HTML(base::paste(descriptions[[",i,"]]$description, \"<br>\")),",
-                      "HTML(\"<b>pubchem id:</b>\"),",
-                      "HTML(descriptions[[1]]$pubchem_id, \"<br>\"),",
-                      "HTML(\"<b>structure:</b><br><br>\"),",
-                      "img(src = base::paste(drugs[",i,"], \".png\",sep = \"\")),",
-                      "style = \"default\"),", sep = ""))
+    code <- base::paste(code,
+      "bsCollapsePanel(drugs[[",i,"]]$drug,",
+      "HTML(\"<b>drug description:</b>\"),",
+      "HTML(base::paste(descriptions[[",i,"]]$description, \"<br>\")),",
+      "HTML(\"<b>pubchem id:</b>\"),",
+      "HTML(base::paste(descriptions[[",i,"]]$pubchem_id, \"<br>\")),",
+      "HTML(\"<b>structure:</b><br><br>\"),",
+      "img(src = base::paste(drugs[[",i,"]]$drug, \".png\",sep = \"\")),",
+      sep = "")
+    
+    if (!is.null(drugs[[i]]$ortho.score)) {
+      code <- base::paste(code,
+        "HTML(\"<br><b>synergy score:</b>\"),",
+        "HTML(base::paste(drugs[[",i,"]]$ortho.score, \"<br>\")),",
+        sep = "")
+    }
+    
+    if (!is.null(drugs[[i]]$interaction.score)) {
+      code <- base::paste(code, "HTML(\"<b>drug interaction scores and details:</b><br>\"),")
+      
+      for (index in 1:length(drugs[[i]]$interaction.score)) {
+        drug_name <- names(drugs[[i]]$interaction.score[index])
+        value <- drugs[[i]]$interaction.score[[index]]
+        message <- drugs[[i]]$interaction.message[[index]]
+        code <- base::paste(code,
+                            "HTML(base::paste(\"&emsp;\",\"", as.character(drug_name), "\",\":\")),", sep = "")
+        code <- base::paste(code,
+                            "HTML(base::paste(\"<br>&emsp;&emsp;Tanimoto Coefficient:\",\"", value,"\")),", sep = "")
+        code <- base::paste(code,
+                            "HTML(base::paste(\"<br>&emsp;&emsp;Interaction Comments:\",\"", message,"\",\"<br>\")),", sep = "")
+      }
+      
+    }
+
+    code <- base::paste(code,
+                        "style = \"default\"),",sep = "")
+    
   }
 
   # Formate and evaluate the expression
@@ -39,7 +71,7 @@ get_descriptions <- function(drugs) {
   for (drug in drugs) {
     pert_url <- base::paste("https://api.clue.io/api/perts?filter={\"where\":",
                             "{\"pert_iname\":\"",
-                            drug,
+                            drug$drug,
                             "\"}}&user_key=",
                             config::get("api_key"),
                             sep = "")

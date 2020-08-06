@@ -132,8 +132,8 @@ remove_na <- function(scores) {
 }
 
 get_synergistic_drug <- function(top_drugs, reference_drugs, ref_up, ref_down,
-                                 positive_DEG, negative_DEG) {
-  scores <- data.frame(Drug=rep(NA, nrow(top_drugs)), concordance=rep(NA, 1),
+                                 positive_DEG, negative_DEG, interaction_threshold) {
+  scores <- data.frame(drug=rep(NA, nrow(top_drugs)), concordance=rep(NA, 1),
                        discordance=rep(NA, 1),
                        stringsAsFactors=FALSE)
   index <- 1
@@ -177,33 +177,81 @@ get_synergistic_drug <- function(top_drugs, reference_drugs, ref_up, ref_down,
     normalize_scores() %>% 
     insert_orthogonality_scores()
   
-  return(scores[1,]$Drug)
+  return(drug_lookup(scores, reference_drugs, interaction_threshold))
+}
+
+drug_lookup <- function(scores, reference_drugs, interaction_threshold) {
+  
+  flag <- F
+  scores<<-scores
+  
+  interaction_scores <- list()
+  interaction_messages <- list()
+  
+  for (index in 1:nrow(scores)) {
+    row <- scores[index,]
+    for (ref_drug in reference_drugs) {
+      interaction <- dplyr::filter(drug_interactions, drug.A == ref_drug &&
+                                     drug.B == row$drug)
+      if (dim(interaction)[1] != 0 && 
+          interaction$Tanimoto.coefficient..TC. < interaction_threshold) {
+        interaction_scores[[ref_drug]] <- interaction$Tanimoto.coefficient..TC.
+        interaction_messages[[ref_drug]] <- interaction$Effect.interaction.drugA.drugB
+        flag <- T
+      } else {
+        flag <- T
+        interaction_scores[[ref_drug]] <- 0
+        interaction_messages[[ref_drug]] <- "no known interactions"
+      }
+    }
+    if (flag) return(list(drug = row$drug, 
+                          ortho.score = row$ortho.score, 
+                          interaction.score = interaction_scores,
+                          interaction.message = interaction_messages))
+  }
+  
+  return(NULL)
 }
 
 synergize_drugs <- function(top_drugs, drug_name, positive_DEG, 
-                            negative_DEG, combination_size) {
+                            negative_DEG, combination_size, 
+                            interaction_threshold) {
   
   if (drug_name == "") drug_name <- NULL
-  print(drug_name)
-  
-  drugs = c(drug_name)
+
+  ref_drugs = c(drug_name)
   ref_up = c()
   ref_down = c()
+  
+  drugs = list()
   
   source("caches/synergize_cache.R")
   
   for (curr_drug_index in 1:combination_size) {
-    ref_drug_sig <- get_ref_drug_sig(drugs[curr_drug_index])
+    ref_drug_sig <- get_ref_drug_sig(ref_drugs[curr_drug_index])
     ref_up <- c(ref_up, ref_drug_sig$ref_up)
     ref_down <- c(ref_down, ref_drug_sig$ref_down)
     reference_drug <- ref_drug_sig$reference_drug
     
-    if (is.null(drugs)) drugs <- c(drugs, reference_drug)
+    if (is.null(ref_drugs)) ref_drugs <- c(ref_drugs, reference_drug)
+    if (is_empty(drugs)) drugs[[reference_drug]] <- list(drug = reference_drug,
+                                                         ortho.score = NULL,
+                                                         interaction.score = NULL,
+                                                         interaction.message = NULL)
     
-    synergistic_drug <- get_synergistic_drug(top_drugs, drugs, 
+    synergistic_drug <- get_synergistic_drug(top_drugs, ref_drugs, 
                                              ref_up, ref_down, 
-                                             positive_DEG, negative_DEG)
-    drugs = c(drugs, synergistic_drug)
+                                             positive_DEG, negative_DEG,
+                                             interaction_threshold)
+    
+    if(is.null(synergistic_drug)) {
+      stop("Could not find enough synergistic drugs with those parameters. 
+           Please increase the interaction threshold, choose another 
+           reference drug, or decrease the number of synergistic drugs.")
+    }
+    
+    ref_drugs = c(ref_drugs, synergistic_drug$drug)
+    drugs[[synergistic_drug$drug]] <- synergistic_drug
   }
   
   return(drugs)

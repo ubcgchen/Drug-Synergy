@@ -1,3 +1,5 @@
+library(rlist)
+
 if (!exists("synergize_cache")) {
   synergize_cache = list()
 }

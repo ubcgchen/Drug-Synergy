@@ -44,6 +44,7 @@ ui <- fluidPage(theme = shinytheme("paper"),
                 DT::dataTableOutput("top_drugs"),
                 uiOutput("synergy_number"),
                 uiOutput("reference_drug"),
+                uiOutput("interaction_threshold"),
                 uiOutput("find_synergy"),
                 uiOutput("top_table_back_button"),
                 uiOutput("synergized_drug_tag"),
@@ -54,10 +55,9 @@ ui <- fluidPage(theme = shinytheme("paper"),
 # Server
 server <- function(input, output) {
   
-  # TESTING PURPOSES ONLY: Start at the cmap page
-  # source("cmap_results_page")
-  # output <- render_cmap_results_page(output)
-  
+  # Setup the app on start
+  # setup()
+
   # Used to get user filters for generating top tables
   filters <- reactiveValues(
     input_filters = list()
@@ -291,7 +291,8 @@ server <- function(input, output) {
   observeEvent(input$find_synergy, {
     source("drug_synergizer.R")
     drugs <- synergize_drugs(top_drugs, input$reference_drug, positive_DEG,
-                             negative_DEG, input$synergy_number)
+                             negative_DEG, input$synergy_number, 
+                             input$interaction_threshold)
     
     source("pages/synergized_drugs_page.R")
     output <- render_synergized_drugs_page(output, drugs)

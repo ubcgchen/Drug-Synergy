@@ -23,6 +23,12 @@ render_cmap_results_page <- function(output) {
               "Reference drug (leave blank to default to top CMap drug)")
   })
   
+  output$interaction_threshold <- renderUI({
+    numericInput("interaction_threshold",
+                 "Enter your drug interaction threshold (0.000-1.000)", 0,
+                 min = 0, max = 0, step = 0.001)
+  })
+  
   output$find_synergy <- renderUI({
     actionButton("find_synergy", "Find Synergistic Drug Combinations", 
                  icon("ok", lib = "glyphicon"))
@@ -39,4 +45,5 @@ manage_cmap_results_page <- function(func) {
   func(id = "top_table_back_button")
   func(id = "synergy_number")
   func(id = "reference_drug")
+  func(id = "interaction_threshold")
 }

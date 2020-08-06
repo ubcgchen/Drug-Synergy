@@ -1,3 +1,4 @@
+library(rlist)
 
 if (!exists("analysis_cache")) {
   analysis_cache <- list()

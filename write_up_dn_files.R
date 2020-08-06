@@ -1,3 +1,5 @@
+library(cmapR)
+
 write_gmt_files <- function(positive_DEG, negative_DEG) {
   TAG_DN <- list()
   TAG_DN$head = "TAG_DN"
