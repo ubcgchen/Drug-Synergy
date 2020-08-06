@@ -33,7 +33,7 @@ generate_DEG_table <- function(func, tt, filters, num_genes) {
 
 apply_user_filters <- function(tt, filters) {
   for (filter in filters) {
-    source("filter_functions.R")
+    source("controller/level_selector_page_helpers/filter_functions.R")
     column <- filter[1]
     func <- get_func(filter[2])
     value <- as.numeric(filter[3])
@@ -55,7 +55,7 @@ do_analysis <- function(expression_matrix, design_matrix, user_filters,
   source("tools/affy_entrez_converter.R")
   top_table <- affy_to_entrez(top_table, TRUE)
   
-  source("filter_functions.R")
+  source("controller/level_selector_page_helpers/filter_functions.R")
   positive_DEG <- generate_DEG_table(greater_than_zero, top_table, 
                                      user_filters, num_upgenes)
   negative_DEG <- generate_DEG_table(less_than_zero, top_table,
