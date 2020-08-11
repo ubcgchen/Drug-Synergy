@@ -11,7 +11,7 @@ ui <- fluidPage(theme = shinytheme("paper"),
                 useShinyalert(),
                 shinyjs::useShinyjs(),
                 sidebarPanel(
-                textInput("accession_code", "GEO Accession Code:", "E-GEOD-28750",
+                textInput("accession_code", "Accession Code:",
                           placeholder = "E-GEOD-XXXXX"),
                 actionButton("geo","Submit GEO Accession Code")
                 ),
@@ -102,7 +102,7 @@ server <- function(input, output) {
     tryCatch({
       # download data from ArrayExpress, load the SDRF file, and render it
       source("controller/AE_downloader.R")
-      #AE_data <<- download_AE_data(input$accession_code)
+      # AE_data <<- download_AE_data(input$accession_code)
       
       source("controller/gene_analyzer/SDRF_loader.R")
       SDRF <<- load_SDRF(AE_data, input$accession_code)
@@ -167,7 +167,7 @@ server <- function(input, output) {
                                    prefix, suffix)
 
       source("pages/level_selection_page.R")
-      output <- render_level_selection_page(output)
+      output <- render_level_selection_page(output, updated_SDRF)
     },
     
     error=function(cond) {
@@ -265,7 +265,7 @@ server <- function(input, output) {
     tryCatch({
       source("controller/cmap/cmap_coordinator.R")
       source("pages/cmap_results_page.R")
-      
+    
       coordinate_cmap(input$accession_code, positive_DEG, negative_DEG)
       
       output <- render_cmap_results_page(output)

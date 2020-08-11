@@ -1,4 +1,4 @@
-render_level_selection_page <- function(output) {
+render_level_selection_page <- function(output, updated_SDRF) {
   
   source("pages/raw_SDRF_page.R")
   manage_raw_SDRF_page(shinyjs::hide)

@@ -1,4 +1,3 @@
-library(ArrayExpress)
 library(data.table)
 library(tidyverse)
 

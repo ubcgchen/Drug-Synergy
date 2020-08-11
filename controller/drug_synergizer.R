@@ -113,7 +113,7 @@ normalize_scores <- function(scores) {
     (x-min(scores$discordance))/(max(scores$discordance)-min(scores$discordance))
   }))
   
-  return (scores)
+  return(scores)
 }
 
 insert_orthogonality_scores <- function(scores) {
@@ -166,8 +166,6 @@ get_synergistic_drug <- function(top_drugs, reference_drugs, ref_up, ref_down,
     scores[index, 3] = discordance_ratio
     
     index = index + 1
-    
-    if (index == 10) break
 }
   
   # process scores and compute orthogonality scores
@@ -183,7 +181,6 @@ get_synergistic_drug <- function(top_drugs, reference_drugs, ref_up, ref_down,
 drug_lookup <- function(scores, reference_drugs, interaction_threshold) {
   
   flag <- F
-  scores<<-scores
   
   interaction_scores <- list()
   interaction_messages <- list()

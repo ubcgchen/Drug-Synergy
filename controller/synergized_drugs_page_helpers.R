@@ -1,7 +1,7 @@
 build_bs_collapse <- function(length, drugs) {
 
   # Get information on each drug
-  descriptions <<- get_descriptions(drugs)
+  descriptions <- get_descriptions(drugs)
   
   # Download the structure for each drug
   for(description in descriptions) {
@@ -9,7 +9,7 @@ build_bs_collapse <- function(length, drugs) {
                                  ".png", sep = "")
     print(file.exists(destfile_name))
     if (!file.exists(destfile_name)) {
-      download.file(description$structure_link,
+      download.file(description$structure_link[1],
                     destfile = destfile_name)
     }
     }

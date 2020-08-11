@@ -1,3 +1,5 @@
+library(ArrayExpress)
+
 download_AE_data <- function(accession_code) {
   
   # make sure an accession code is provided

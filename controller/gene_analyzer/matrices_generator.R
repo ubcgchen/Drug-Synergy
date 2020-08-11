@@ -36,14 +36,12 @@ build_expression_matrix <- function(file_paths) {
   return(return_val)
 }
 
-memoised_expression_mtrx <- memoise(build_expression_matrix)
-
 build_design_matrix <- function(control, condition) {
   return(cbind(1 , c(rep(0 , control) , rep(1 , condition))))
 }
 
 build_matrices <- function(file_paths) {
-  res <- memoised_expression_mtrx(file_paths)
+  res <- build_expression_matrix(file_paths)
   design_matrix <- build_design_matrix(res$control_len, res$condition_len)
   
   return(list(expression_matrix = res$expression_matrix,
